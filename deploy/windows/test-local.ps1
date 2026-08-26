@@ -13,7 +13,8 @@
 
 $ErrorActionPreference = 'Stop'
 
-$dotnetExe = "C:\Program Files\dotnet\dotnet.exe"
+$dotnetCmd = Get-Command dotnet -ErrorAction SilentlyContinue
+$dotnetExe = if ($dotnetCmd) { $dotnetCmd.Source } else { "C:\Program Files\dotnet\dotnet.exe" }
 $publishPath = "C:\inetpub\lo-website"
 
 Write-Host "=== Lo Revival - Local Smoke Test ===" -ForegroundColor Cyan
@@ -21,12 +22,12 @@ Write-Host "=== Lo Revival - Local Smoke Test ===" -ForegroundColor Cyan
 # ── 1. .NET runtime + Kestrel process ──────────────────────────────
 Write-Host ""
 Write-Host "[1/6] .NET runtime present?" -ForegroundColor Yellow
-if (Test-Path $dotnetExe) {
+if ($dotnetExe -and (Test-Path $dotnetExe)) {
     $ver = & $dotnetExe --version 2>&1
     Write-Host "  dotnet $ver" -ForegroundColor Green
 } else {
-    Write-Host "  .NET SDK not found at $dotnetExe" -ForegroundColor Red
-    Write-Host "  Install from: https://aka.ms/dotnet/8.0/windows" -ForegroundColor Yellow
+    Write-Host "  .NET SDK not found ($dotnetExe)" -ForegroundColor Red
+    Write-Host "  Install from: https://dotnet.microsoft.com/download/dotnet/10.0" -ForegroundColor Yellow
     exit 1
 }
 
@@ -68,7 +69,7 @@ if (Test-Path $prodSettingsPath) {
         $env:PGPASSWORD = $dbPass
         & psql -U $dbUser -h $dbHost -p $dbPort -d $dbName -c "SELECT 1" -t 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "  PostgreSQL: CONNECTED ($dbHost:$dbPort/$dbName)" -ForegroundColor Green
+            Write-Host "  PostgreSQL: CONNECTED ($($dbHost):$($dbPort)/$($dbName))" -ForegroundColor Green
         } else {
             Write-Host "  PostgreSQL: FAILED (psql exit $($LASTEXITCODE))" -ForegroundColor Red
         }
@@ -126,7 +127,7 @@ foreach ($test in $tests) {
             Write-Host "  $($test.Name): UNEXPECTED $($response.StatusCode)" -ForegroundColor Yellow
         }
     } catch {
-        $code = $_.Exception.Response.StatusCode.value__
+        $code = if ($_.Exception -and $_.Exception.Response) { $_.Exception.Response.StatusCode.value__ } else { "CONN_ERR" }
         Write-Host "  $($test.Name): FAILED ($code)" -ForegroundColor Red
         if ($_.Exception.Message) { Write-Host "    $($_.Exception.Message)" -ForegroundColor Red }
     }

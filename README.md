@@ -63,6 +63,11 @@ Two quirks it handles on its own:
   proxy keeps the latest pair from upstream responses and does the
   fail-then-retry dance automatically, so plain POSTs from the bot just work.
   (`/debug` shows whether the csrf pair is currently loaded.)
+- **Your cookie (optional)**: set `MADXKA_COOKIE` in the bot's `.env` (the bat
+  prompts for it) to make the proxy act as your logged-in MadXka account —
+  the bot forwards it to the proxy, which merges it with its own fresh csrf
+  cookie before hitting MadXka. The proxy also accepts `MADXKA_COOKIE` as a
+  Render env var if you'd rather configure it there.
 
 ## 1. Deploy the proxy on Render
 

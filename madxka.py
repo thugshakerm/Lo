@@ -29,6 +29,7 @@ from that codebase:
 
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime
 from typing import Any, Optional, Sequence
@@ -155,6 +156,9 @@ class MadxkaClient:
         self.base_url = base_url.rstrip("/")
         self.session = session
         self.timeout = timeout
+        # optional madxka.com browser cookie — forwarded to the proxy, which
+        # sends it upstream so the API sees a logged-in browser session
+        self.cookie = os.environ.get("MADXKA_COOKIE", "").strip()
 
     # ------------------------------------------------------------------ core
     async def _request(
@@ -168,12 +172,15 @@ class MadxkaClient:
         """GET/POST a JSON API path. 404 -> None, other errors -> MadxkaError."""
         url = f"{self.base_url}{path}"
         try:
+            headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+            if self.cookie:
+                headers["x-madxka-cookie"] = self.cookie
             async with self.session.request(
                 method,
                 url,
                 params=params,
                 json=json_body,
-                headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=self.timeout),
             ) as resp:
                 if resp.status == 404:

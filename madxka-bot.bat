@@ -88,9 +88,16 @@ set /p PROXY="MadXka proxy URL [%PROXY_DEFAULT%]: "
 if "%PROXY%"=="" set "PROXY=%PROXY_DEFAULT%"
 set "GUILD="
 set /p GUILD="Server ID for instant command sync [blank = global sync]: "
+echo.
+echo Optional: your madxka.com cookie - makes the bot act as your account.
+echo   To get it: open madxka.com in a browser, press F12, Network tab,
+echo   click any request, copy the whole "cookie" value from the headers.
+set "COOKIE="
+set /p COOKIE="MadXka cookie [blank = none]: "
 echo DISCORD_TOKEN=%TOKEN%> .env
 echo MADXKA_BASE_URL=%PROXY%>> .env
 echo DISCORD_GUILD_ID=%GUILD%>> .env
+echo MADXKA_COOKIE=%COOKIE%>> .env
 echo.
 echo .env written.
 goto runbot

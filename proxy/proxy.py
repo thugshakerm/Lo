@@ -39,6 +39,10 @@ from aiohttp import web
 UPSTREAM = os.environ.get("MADXKA_UPSTREAM", "https://madxka.com").rstrip("/")
 PORT = int(os.environ.get("PORT", "10000"))
 BADGES_DIR = Path(__file__).parent / "badges"
+# optional: a real madxka.com browser cookie (session id etc.). Makes the
+# proxy act as that logged-in browser. Can also arrive per-request from the
+# bot via the x-madxka-cookie header (the bat stores it in .env).
+MADXKA_COOKIE = os.environ.get("MADXKA_COOKIE", "").strip()
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -86,12 +90,29 @@ class CsrfStore:
             self.token = token
 
     def headers_for(self, method: str) -> dict:
-        if method in ("GET", "HEAD", "OPTIONS") or not (self.cookie and self.token):
+        if method in ("GET", "HEAD", "OPTIONS") or not self.token:
             return {}
-        return {
-            "Cookie": f"{CSRF_COOKIE_NAME}={self.cookie}",
-            "x-csrf-token": self.token,
-        }
+        return {"x-csrf-token": self.token}
+
+
+def build_upstream_cookie(base_cookie: str | None, csrf_cookie: str | None) -> str | None:
+    """Merge the user's madxka cookie with the proxy's fresh rbxcsrf4.
+
+    The user cookie may carry a stale rbxcsrf4 — the proxy's freshly
+    refreshed one always wins (it's the one that matches x-csrf-token).
+    """
+    jar: dict[str, str] = {}
+    for part in (base_cookie or "").split(";"):
+        part = part.strip()
+        if "=" in part:
+            key, _, value = part.partition("=")
+            if key:
+                jar[key] = value
+    if csrf_cookie:
+        jar[CSRF_COOKIE_NAME] = csrf_cookie
+    if not jar:
+        return None
+    return "; ".join(f"{k}={v}" for k, v in jar.items())
 
 # response headers worth forwarding to the client
 RESP_HEADERS = {"content-type", "cache-control", "content-disposition", "set-cookie"}
@@ -249,6 +270,10 @@ async def debug(_request: web.Request) -> web.Response:
                 "cookie_loaded": bool(_request.app["csrf"].cookie),
                 "token_loaded": bool(_request.app["csrf"].token),
             },
+            "madxka_cookie": {
+                "env_configured": bool(MADXKA_COOKIE),
+                "from_request": bool(_request.headers.get("x-madxka-cookie")),
+            },
         }
     )
 
@@ -278,6 +303,12 @@ async def proxy(request: web.Request) -> web.StreamResponse:
         headers["User-Agent"] = USER_AGENT
         headers["Accept-Encoding"] = UPSTREAM_ACCEPT_ENCODING
         headers.update(csrf.headers_for(request.method))
+        # act as the user's logged-in browser when a cookie is configured
+        # (per-request header from the bot wins, then the env var)
+        base_cookie = request.headers.get("x-madxka-cookie") or MADXKA_COOKIE
+        cookie = build_upstream_cookie(base_cookie, csrf.cookie)
+        if cookie:
+            headers["Cookie"] = cookie
         try:
             async with session.request(
                 request.method,

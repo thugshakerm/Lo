@@ -501,9 +501,10 @@ async def on_app_command_error(
     if isinstance(error, (madxka.MadxkaError, discord.HTTPException)):
         return  # already handled (or nothing to do)
     log.exception("unhandled app command error", exc_info=error)
-    # include the exception type so it's diagnosable from the chat message;
-    # the full traceback goes to the bot console
-    message = f"🤔 something went wrong on my end ({type(error).__name__}). try again in a bit."
+    # include the exception type + message so it's diagnosable from the chat
+    # message; the full traceback goes to the bot console
+    detail = str(error).replace("\n", " ")[:160] or type(error).__name__
+    message = f"🤔 something went wrong on my end ({detail}). try again in a bit."
     if interaction.response.is_done():
         await interaction.followup.send(message, ephemeral=True)
     else:

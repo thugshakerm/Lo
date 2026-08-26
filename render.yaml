@@ -1,0 +1,16 @@
+# Deploy with Render: push this repo, then in Render click "New +" ->
+# "Blueprint" and pick this repo. The madxka-proxy web service is created.
+# Afterwards set the bot's MADXKA_BASE_URL to https://<your-service>.onrender.com
+services:
+  - type: web
+    name: madxka-proxy
+    runtime: python
+    rootDir: proxy
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python proxy.py
+    healthCheckPath: /health
+    envVars:
+      - key: MADXKA_UPSTREAM
+        value: https://madxka.com
+      # free-tier services sleep; the /health check keeps them warm

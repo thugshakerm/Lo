@@ -1,0 +1,283 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>MadXka bot — embed preview</title>
+<style>
+  body { background:#1e1f22; color:#dbdee1; font-family:gg sans, 'Segoe UI', sans-serif; margin:0; padding:24px; }
+  h1 { font-size:18px; }
+  .card { margin-bottom:28px; }
+  .card-label { font-size:13px; color:#949ba4; margin:0 0 8px 2px; font-weight:600; }
+  .embed { background:#2b2d31; border-left:4px solid; border-radius:4px; max-width:520px; padding:10px 14px 8px; }
+  .eb-author-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; font-size:14px; font-weight:700; color:#dbdee1; }
+  .badge { height:18px; width:auto; display:block; }
+  .attach-row { display:flex; gap:10px; margin:10px 2px 0; }
+  .attach { height:90px; width:90px; object-fit:contain; }
+  .eb-title { font-weight:700; font-size:15px; margin-bottom:8px; word-break:break-word; }
+  .eb-title a { color:inherit; text-decoration:none; }
+  .eb-body { display:flex; gap:12px; }
+  .eb-fields { flex:1; min-width:0; }
+  .field { width:33.33%; display:inline-block; vertical-align:top; margin-right:-4px; box-sizing:border-box; padding:0 4px; }
+  .field:not(.inline) { width:100%; }
+  .f-name { font-size:12px; font-weight:700; margin-bottom:2px; color:#dbdee1; }
+  .f-value { font-size:13px; color:#dbdee1; word-break:break-word; white-space:pre-wrap; }
+  .thumb { width:72px; height:72px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+  .big { width:160px; object-fit:cover; border-radius:8px; flex-shrink:0; max-height:220px; }
+  .eb-foot { margin-top:10px; font-size:11px; color:#949ba4; display:flex; gap:8px; align-items:center; }
+  .eb-author { font-weight:700; color:#dbdee1; }
+  .missing { color:#f23f43; }
+</style></head>
+<body>
+  <h1>MadXka Discord bot — embed preview (built from the real <code>embed.to_dict()</code>)</h1>
+  <p style="color:#949ba4; font-size:13px">Mock data. Real thumbnails won't load in this offline preview, but layout/fields are exactly what Discord renders.</p>
+  <div class='card'><div class='card-label'>👤 /user — headshot + verified badge</div>
+    <div class="embed" style="border-color:#2B7FFF">
+      <div class="eb-author-row"><img class="badge" src="proxy/badges/verified.png" alt="badge"><span>Builderman</span></div>
+      <div class="eb-title" style="color:#2B7FFF"><a href="https://madxka.com/users/1" target="_blank">👤 Builderman</a></div>
+      <div class="eb-body">
+        <div class="eb-fields">
+          <div class="eb-col">
+        <div class="field inline">
+          <div class="f-name">Username</div>
+          <div class="f-value">`Builderman`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">User ID</div>
+          <div class="f-value">`1`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Joined</div>
+          <div class="f-value">&lt;t:1163182601&gt;</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Verified</div>
+          <div class="f-value">✅</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">RAP</div>
+          <div class="f-value">💎 420</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Status</div>
+          <div class="f-value">✅ Active</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">Status message</div>
+          <div class="f-value">in game</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">About</div>
+          <div class="f-value">Roblox creator. I like building things. 🧱</div>
+        </div></div>
+        </div>
+        
+        <img class="thumb" src="https://madxka.com/images/thumbnails/aaa_headshot.png" alt="thumb">
+      </div>
+      <div class="eb-foot">
+        <span class="eb-author">MadXka bot</span>
+        <span class="eb-time">2026-08-26T21:09:55.401515+00:00</span>
+        <span class="eb-footer">MadXka • bubbablox v2</span>
+      </div>
+    </div></div><div class='card'><div class='card-label'>👤 /user — verified + staff: two separate badges, side by side</div>
+    <div class="embed" style="border-color:#2B7FFF">
+      
+      <div class="eb-title" style="color:#2B7FFF"><a href="https://madxka.com/users/777" target="_blank">👤 staffy</a></div>
+      <div class="eb-body">
+        <div class="eb-fields">
+          <div class="eb-col">
+        <div class="field inline">
+          <div class="f-name">Username</div>
+          <div class="f-value">`staffy`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">User ID</div>
+          <div class="f-value">`777`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Joined</div>
+          <div class="f-value">&lt;t:1763312138&gt;</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Verified</div>
+          <div class="f-value">✅</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">RAP</div>
+          <div class="f-value">💎 10</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Status</div>
+          <div class="f-value">✅ Active</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">About</div>
+          <div class="f-value">madxka admin</div>
+        </div></div>
+        </div>
+        
+        <img class="thumb" src="https://madxka.com/images/thumbnails/ccc_headshot.png" alt="thumb">
+      </div>
+      <div class="eb-foot">
+        <span class="eb-author">MadXka bot</span>
+        <span class="eb-time">2026-08-26T21:09:55.401626+00:00</span>
+        <span class="eb-footer">MadXka • bubbablox v2</span>
+      </div>
+    </div><div class='attach-row'><img class='attach' src='proxy/badges/verified.png' alt='badge'><img class='attach' src='proxy/badges/admin.png' alt='badge'></div></div><div class='card'><div class='card-label'>📦 /item — thumbnail</div>
+    <div class="embed" style="border-color:#2B7FFF">
+      
+      <div class="eb-title" style="color:#2B7FFF"><a href="https://madxka.com/catalog/999" target="_blank">🧢 Doge Hat</a></div>
+      <div class="eb-body">
+        <div class="eb-fields">
+          <div class="eb-col">
+        <div class="field inline">
+          <div class="f-name">Asset ID</div>
+          <div class="f-value">`999`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Type</div>
+          <div class="f-value">Hat</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Creator</div>
+          <div class="f-value">Builderman</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Price</div>
+          <div class="f-value">R$500</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Favorites</div>
+          <div class="f-value">⭐ 67,890</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Sales</div>
+          <div class="f-value">💰 12,345</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Limited</div>
+          <div class="f-value">🔥 Limited<br>812 left</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Lowest price</div>
+          <div class="f-value">R$350</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Created</div>
+          <div class="f-value">&lt;t:1562230800&gt;</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Updated</div>
+          <div class="f-value">&lt;t:1673771400&gt;</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">Description</div>
+          <div class="f-value">a classic doge hat. very hat.</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">More results</div>
+          <div class="f-value">`1000` Doge Hat 2000<br>`1001` Super Doge</div>
+        </div></div>
+        </div>
+        
+        <img class="thumb" src="https://cdn.example.com/items/999.png" alt="thumb">
+      </div>
+      <div class="eb-foot">
+        <span class="eb-author">MadXka bot</span>
+        <span class="eb-time">2026-08-26T21:09:55.401724+00:00</span>
+        <span class="eb-footer">MadXka • bubbablox v2</span>
+      </div>
+    </div></div><div class='card'><div class='card-label'>🎮 /game — icon</div>
+    <div class="embed" style="border-color:#2B7FFF">
+      
+      <div class="eb-title" style="color:#2B7FFF"><a href="https://madxka.com/games/777" target="_blank">🎮 Obby Paradise</a></div>
+      <div class="eb-body">
+        <div class="eb-fields">
+          <div class="eb-col">
+        <div class="field inline">
+          <div class="f-name">Universe ID</div>
+          <div class="f-value">`555`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Place ID</div>
+          <div class="f-value">`777`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Creator</div>
+          <div class="f-value">Builderman</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Players</div>
+          <div class="f-value">👥 1,234</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Visits</div>
+          <div class="f-value">👣 9,876,543</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Favorites</div>
+          <div class="f-value">⭐ 45,000</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Votes</div>
+          <div class="f-value">👍 5,000 / 👎 300 • 94%</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Genre</div>
+          <div class="f-value">Adventure</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Max players</div>
+          <div class="f-value">👥 100</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Year</div>
+          <div class="f-value">2018</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Created</div>
+          <div class="f-value">&lt;t:1582934400&gt;</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Updated</div>
+          <div class="f-value">&lt;t:1785578400&gt;</div>
+        </div>
+        <div class="field ">
+          <div class="f-name">Description</div>
+          <div class="f-value">Jump and die. 500 stages of pure chaos.</div>
+        </div></div>
+        </div>
+        
+        <img class="thumb" src="https://cdn.example.com/games/555.png" alt="thumb">
+      </div>
+      <div class="eb-foot">
+        <span class="eb-author">MadXka bot</span>
+        <span class="eb-time">2026-08-26T21:09:55.401754+00:00</span>
+        <span class="eb-footer">MadXka • bubbablox v2</span>
+      </div>
+    </div></div><div class='card'><div class='card-label'>🖼️ /avatar — full body</div>
+    <div class="embed" style="border-color:#2B7FFF">
+      
+      <div class="eb-title" style="color:#2B7FFF"><a href="https://madxka.com/users/123456" target="_blank">🖼️ coolplayer&#x27;s Avatar</a></div>
+      <div class="eb-body">
+        <div class="eb-fields">
+          <div class="eb-col">
+        <div class="field inline">
+          <div class="f-name">Username</div>
+          <div class="f-value">`coolplayer`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">User ID</div>
+          <div class="f-value">`123456`</div>
+        </div>
+        <div class="field inline">
+          <div class="f-name">Joined</div>
+          <div class="f-value">&lt;t:1619872496&gt;</div>
+        </div></div>
+        </div>
+        <img class="big" src="https://madxka.com/images/thumbnails/bbb_thumbnail.png" alt="image">
+        <img class="thumb" src="https://madxka.com/images/thumbnails/bbb_headshot.png" alt="thumb">
+      </div>
+      <div class="eb-foot">
+        <span class="eb-author">MadXka bot</span>
+        <span class="eb-time">2026-08-26T21:09:55.401786+00:00</span>
+        <span class="eb-footer">MadXka • bubbablox v2</span>
+      </div>
+    </div></div>
+</body></html>

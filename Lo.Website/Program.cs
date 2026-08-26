@@ -139,14 +139,6 @@ Lo.Website.Controllers.SettingController.Map(ClientSettings());
 // ── applicationcompatibility.<domain> ───────────────────────────────
 Lo.Website.Controllers.CompatibilityController.Map(Compat());
 
-// ── Listen on port 8080 if running standalone outside IIS ───────────
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ANCM_LAUNCH_RESULT_PATH")) &&
-    string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_PORT")))
-{
-    app.Urls.Clear();
-    app.Urls.Add("http://0.0.0.0:8080");
-}
-
 // Helpful startup banner
 app.Lifetime.ApplicationStarted.Register(() =>
 {

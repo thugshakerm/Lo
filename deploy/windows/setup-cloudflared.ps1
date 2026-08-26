@@ -84,8 +84,15 @@ Set-Content -Path $configPath -Value $configContent
 
 # ── 3. Install + start as a service ─────────────────────────────────
 Write-Host "[3/3] Installing cloudflared as a Windows service..." -ForegroundColor Yellow
-& $cfExe service install
-Start-Service cloudflared
+$cfService = Get-Service cloudflared -ErrorAction SilentlyContinue
+if ($cfService) {
+    Stop-Service cloudflared -ErrorAction SilentlyContinue
+    & $cfExe service uninstall 2>&1 | Out-Null
+}
+
+# Install using the token (official Cloudflare Zero Trust service install)
+& $cfExe service install $tunnelToken
+Start-Service cloudflared -ErrorAction SilentlyContinue
 
 # ── Done ─────────────────────────────────────────────────────────────
 Write-Host ""
@@ -94,19 +101,16 @@ Write-Host ""
 Write-Host "Next steps in the Cloudflare Zero Trust dashboard:" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "1. Go to https://one.dash.cloudflare.com/"
-Write-Host "2. Networks -> Tunnels -> lo-revival"
-Write-Host "3. Under 'Public Hostnames', add 5 routes:"
+Write-Host "2. Networks -> Tunnels -> your tunnel"
+Write-Host "3. Under 'Public Hostnames', add 5 routes pointing to http://localhost:80:"
 Write-Host "     www.gazeee.xyz  -> http://localhost:80"
 Write-Host "     api.gazeee.xyz  -> http://localhost:80"
 Write-Host "     assetgame.gazeee.xyz -> http://localhost:80"
 Write-Host "     clientsettingscdn.gazeee.xyz -> http://localhost:80"
 Write-Host "     applicationcompatibility.gazeee.xyz -> http://localhost:80"
 Write-Host ""
-Write-Host "4. (Already done if DNS for gazeee.xyz is on Cloudflare.)"
-Write-Host "   The DNS records for those 5 subdomains will be auto-created."
+Write-Host "4. Verify from the public internet:"
+Write-Host "     https://www.gazeee.xyz/  -> returns Lo service JSON"
+Write-Host "     https://clientsettingscdn.gazeee.xyz/v1/settings/application -> returns FFlag JSON"
 Write-Host ""
-Write-Host "5. Test:"
-Write-Host "     https://www.gazeee.xyz/  -> should return the Lo service info JSON"
-Write-Host "     https://api.gazeee.xyz/v1/settings/application -> should return FFlag JSON"
-Write-Host ""
-Write-Host "If those return the right things, your tunnel + Apache + Laravel is working."
+Write-Host "If those return JSON, your tunnel + IIS + ASP.NET Core 10 stack is fully live!"

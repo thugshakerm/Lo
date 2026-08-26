@@ -211,7 +211,7 @@ foreach ($f in $requiredFeatures) {
 Import-Module WebAdministration
 
 # Stop and remove any existing "lo-website" sites
-$existingSites = @('lo-website-www', 'lo-website-api', 'lo-website-assetgame', 'lo-website-clientsettingscdn', 'lo-website-applicationcompatibility')
+$existingSites = @('lo-website', 'lo-website-www', 'lo-website-api', 'lo-website-assetgame', 'lo-website-clientsettingscdn', 'lo-website-applicationcompatibility')
 foreach ($siteName in $existingSites) {
     if (Test-Path "IIS:\Sites\$siteName") {
         Stop-WebSite $siteName -ErrorAction SilentlyContinue
@@ -222,26 +222,36 @@ if (Test-Path "IIS:\AppPools\lo-website-pool") {
     Remove-WebAppPool "lo-website-pool" -ErrorAction SilentlyContinue
 }
 
-# Create the application pool
+# Create the application pool (single pool for in-process ASP.NET Core)
 New-WebAppPool -Name "lo-website-pool" -Force | Out-Null
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "managedRuntimeVersion" -Value ""
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "startMode" -Value "AlwaysRunning"
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "processModel.identityType" -Value "ApplicationPoolIdentity"
 
-# Create the 5 IIS sites.
-$subdomains = @{
-    'lo-website-www'                       = 'www.gazeee.xyz'
-    'lo-website-api'                       = 'api.gazeee.xyz'
-    'lo-website-assetgame'                 = 'assetgame.gazeee.xyz'
-    'lo-website-clientsettingscdn'         = 'clientsettingscdn.gazeee.xyz'
-    'lo-website-applicationcompatibility'  = 'applicationcompatibility.gazeee.xyz'
+# Create ONE IIS site with all host header bindings (avoids 500.35 in-process app pool collision)
+New-WebSite -Name "lo-website" -PhysicalPath $publishPath -ApplicationPool "lo-website-pool" -Port 80 -HostHeader "www.gazeee.xyz" -Force | Out-Null
+Write-Host "  Created site: lo-website (www.gazeee.xyz -> $publishPath)" -ForegroundColor Green
+
+$otherBindings = @(
+    'api.gazeee.xyz',
+    'assetgame.gazeee.xyz',
+    'clientsettingscdn.gazeee.xyz',
+    'applicationcompatibility.gazeee.xyz',
+    'gazeee.xyz'
+)
+foreach ($hostname in $otherBindings) {
+    New-WebBinding -Name "lo-website" -IPAddress "*" -Port 80 -HostHeader $hostname | Out-Null
+    Write-Host "  Added binding: $hostname" -ForegroundColor Green
 }
 
-foreach ($siteName in $subdomains.Keys) {
-    $hostname = $subdomains[$siteName]
-    New-WebSite -Name $siteName -PhysicalPath $publishPath -ApplicationPool "lo-website-pool" -Port 80 -HostHeader $hostname -Force | Out-Null
-    Write-Host "  Created site: $siteName ($hostname -> $publishPath)" -ForegroundColor Green
+# Ensure logs directory exists
+if (-not (Test-Path "C:\inetpub\logs")) {
+    New-Item -ItemType Directory -Path "C:\inetpub\logs" -Force | Out-Null
 }
+
+# Grant read permissions to IIS_IUSRS
+& icacls $publishPath /grant "IIS_IUSRS:(OI)(CI)RX" /t 2>&1 | Out-Null
+& icacls $storageRoot /grant "IIS_IUSRS:(OI)(CI)RX" /t 2>&1 | Out-Null
 
 # web.config for the ASP.NET Core Module (which the Hosting Bundle installed)
 $webConfig = @"
@@ -252,7 +262,7 @@ $webConfig = @"
             <handlers>
                 <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
             </handlers>
-            <aspNetCore processPath="dotnet" arguments="Lo.Website.dll" stdoutLogEnabled="true" stdoutLogFile="C:\inetpub\logs\lo-website" hostingModel="InProcess" />
+            <aspNetCore processPath="dotnet" arguments=".\Lo.Website.dll" stdoutLogEnabled="true" stdoutLogFile="C:\inetpub\logs\lo-website" hostingModel="InProcess" />
         </system.webServer>
     </location>
 </configuration>
@@ -263,9 +273,7 @@ Write-Host "  Wrote web.config with ASP.NET Core Module handler" -ForegroundColo
 
 # Start everything
 Start-Service W3SVC -ErrorAction SilentlyContinue
-foreach ($siteName in $subdomains.Keys) {
-    Start-WebSite $siteName
-}
+Start-WebSite "lo-website"
 
 # ── 10. Smoke test ──────────────────────────────────────────────────
 Write-Host ""
@@ -275,12 +283,11 @@ Write-Host ".NET SDK: $dotVer"
 Write-Host "Lo.Website:   $publishPath"
 Write-Host ""
 
-Write-Host "IIS sites:"
-foreach ($siteName in $subdomains.Keys) {
-    $state = (Get-WebSite -Name $siteName).State
-    $color = if ($state -eq 'Started') { 'Green' } else { 'Red' }
-    Write-Host "  $($subdomains[$siteName]) : $state" -ForegroundColor $color
-}
+Write-Host "IIS site:"
+$siteState = (Get-WebSite -Name "lo-website").State
+$siteColor = if ($siteState -eq 'Started') { 'Green' } else { 'Red' }
+Write-Host "  lo-website : $siteState" -ForegroundColor $siteColor
+Write-Host "  Bindings: www, api, assetgame, clientsettingscdn, applicationcompatibility, gazeee.xyz"
 
 Write-Host ""
 Write-Host "=== Setup complete! ===" -ForegroundColor Green

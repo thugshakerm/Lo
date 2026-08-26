@@ -77,8 +77,9 @@ app.UseMiddleware<RateLimit>();         // crude per-IP rate limit
 app.UseRouting();
 app.UseMiddleware<SubdomainGuard>();    // after routing, reject mismatches
 
-// ── Health ──────────────────────────────────────────────────────────
+// ── Health & Root ───────────────────────────────────────────────────
 app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
+app.MapGet("/", () => Results.Json(new { service = "Lo Revival", era = "2018M", status = "online" }));
 
 // ── 5 subdomain groups (matching routes/rbx.php 1:1) ────────────────
 //
@@ -138,9 +139,12 @@ Lo.Website.Controllers.SettingController.Map(ClientSettings());
 // ── applicationcompatibility.<domain> ───────────────────────────────
 Lo.Website.Controllers.CompatibilityController.Map(Compat());
 
-// ── Listen on all interfaces, port 8080 (IIS will reverse-proxy) ────
-app.Urls.Clear();
-app.Urls.Add("http://0.0.0.0:8080");
+// ── Listen on port 8080 if running standalone outside IIS ───────────
+if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ANCM_LAUNCH_RESULT_PATH")))
+{
+    app.Urls.Clear();
+    app.Urls.Add("http://0.0.0.0:8080");
+}
 
 // Helpful startup banner
 app.Lifetime.ApplicationStarted.Register(() =>

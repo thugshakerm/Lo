@@ -511,10 +511,10 @@ async def on_app_command_error(
 @bot.event
 async def setup_hook():
     if GUILD_ID:
-        await self.tree.sync(guild=discord.Object(id=int(GUILD_ID)))
+        await bot.tree.sync(guild=discord.Object(id=int(GUILD_ID)))
         log.info("commands synced to guild %s (instant)", GUILD_ID)
     else:
-        await self.tree.sync()
+        await bot.tree.sync()
         log.info("global commands synced (may take a few minutes to show up)")
 
 
@@ -531,6 +531,7 @@ async def main():
         bot.client = madxka.MadxkaClient(BASE_URL, session=session)
         await bot.start(TOKEN)
     finally:
+        await bot.close()
         await session.close()
 
 

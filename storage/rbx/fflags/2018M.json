@@ -1,0 +1,62 @@
+{
+  "_comment": "2018M FFlag configuration served from clientsettingscdn.<domain>/v1/settings/application. Curated subset of the wiki's Research/2018clientfflags.json dump, with revival-specific overrides. See wiki/utilities/fflags-2018.md.",
+
+  "_revival_overrides": {
+    "FFlagDebugDisableTelemetry": "True",
+    "DFFlagDebugDisableTelemetry": "True",
+    "FFlagDebugBuildMode": "False",
+    "DFFlagDebugBuildMode": "False",
+    "DFFlagCLI120342": "True",
+    "DFFlagDebugLocalRCC": "True",
+    "FFlagUseHttpsForAssetDelivery": "False"
+  },
+
+  "_auth_patch": {
+    "_comment": "These flags implement the 2018L+ ticket bypass per wiki/Research/patch tickets on 2018L+.txt. With the binary patch (ProcessTicket exception -> JMP) AND the DFFlagCLI120342 flag, ticket verification is fully disabled.",
+    "DFFlagCLI120342": "True",
+    "DFFlagDebugLocalRCC": "True"
+  },
+
+  "AnimationFlags": {
+    "DFFlagAccessoriesAndAttachments": "True",
+    "DFFlagAddPlaceIdToAnimationRequests": "True",
+    "DFFlagAnimationAllowProdUrls": "True",
+    "DFFlagAnimationEasingStylesEnabled": "True",
+    "DFFlagAnimationFormatAssetId": "True",
+    "FFlagUseCustomAnimations": "True"
+  },
+
+  "NetworkFlags": {
+    "DFFlagAllowHttpServiceInTeamCreate": "True",
+    "DFFlagBlockCustomHttpHeaders": "False",
+    "DFFlagBroadcastServerOnAllInterfaces": "True",
+    "DFFlagAllowModuleLoadingFromAssetId": "True",
+    "DFFlagCrossPacketCompression": "True"
+  },
+
+  "PhysicsFlags": {
+    "DFFlagAdjustFloorForce": "True",
+    "DFFlagAlwaysUseHumanoidMass": "True",
+    "DFFlagBodyMoverParentingFix": "True",
+    "DFFlagBulletFixCacheReuse": "True",
+    "FFlagPhysics60HZ": "True"
+  },
+
+  "CharacterFlags": {
+    "DFFlagAllowCustomR15Character": "True",
+    "DFFlagAllowHumanoidDecalTransparency": "True",
+    "FFlagUseHumanoidAnimatedCustomAnim": "True",
+    "FFlagUseKeyframeHumanoidAnimations": "True",
+    "DFFlagCharacterAppearanceLoadedEnabled": "True"
+  },
+
+  "OtherNotableFlags": {
+    "DFFlagDataStoreEnabled": "False",
+    "DFFlagConsoleCodeExecutionEnabled": "True",
+    "DFFlagAddRequestIdToDeveloperProductPurchases": "True",
+    "DFFlagCreateHumanoidRootNode": "True",
+    "DFFlagUseCharacterRootForCameraTarget": "True",
+    "DFFlagContentProviderHttpCaching": "True",
+    "DFFlagCoreGuiCustomizationApi": "True"
+  }
+}

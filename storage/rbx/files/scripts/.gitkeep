@@ -1,0 +1,13 @@
+# Lua + JSON join scripts, served to game servers at boot.
+# Gitignored (the signed wrapper is generated at delivery time).
+#
+# - gameserver.lua     signed with V2, served at /Game/Gameserver.lua
+#                       (2012-2016 era Lua join script format)
+# - gameserver.json    served at /Game/Gameserver.json
+#                       (2016+ JSON join script format, 2018M uses this)
+# - studio.lua         signed with V2, served at /Game/Studio.ashx
+#                       (Studio Test mode, similar shape to gameserver.lua)
+#
+# The wiki's articles/infrastructure/api/joinscript.md documents the
+# 2016+ JSON format; the 2012-2016 Lua format is the body of the
+# original Roblox GameServer.ashx.

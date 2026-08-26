@@ -1,0 +1,8 @@
+# Place your RSA private key and RCC WSDL here. Gitignored.
+#
+# Generate the key with:
+#   openssl genrsa -out privateKey1024.pem 1024
+#   openssl rsa -in privateKey1024.pem -pubout -outform DER \
+#     | base64 -w 0 > ../public/publicKeyBlob.txt
+#
+# Copy the WSDL from the wiki's Resources/RCCService.wsdl.

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Lo.Rcc</RootNamespace>
+    <AssemblyName>Lo.Rcc</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Lo.Rcc is a thin SOAP client over HttpClient + XDocument.
+      Microsoft.Extensions.Logging.Abstractions is needed for the
+      ILogger<T> interface (we don't take a logging-implementation
+      dependency, just the interface).
+    -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,3 @@
+# Place your public key blob (CAPI format) here. Gitignored.
+# This is the blob you paste into the patched client at the
+# BgIAA... location.

@@ -1,0 +1,42 @@
+## Build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+## .NET
+*.dll
+*.pdb
+*.exe
+!dotnet.exe
+*.cache
+*.nuget/
+*.swp
+
+## OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Logs
+*.log
+logs/
+
+## Editor temp files
+*~
+*.tmp
+*.bak
+
+## Local environment
+.env
+appsettings.Local.json
+appsettings.Development.json
+
+## RSA / WSDL — never commit (gitignored deployment-specific content)
+privateKey1024.pem
+publicKeyBlob.txt
+*.wsdl
+gameserver.lua

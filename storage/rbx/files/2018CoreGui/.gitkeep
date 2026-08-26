@@ -1,0 +1,4 @@
+# Place per-asset 2018M CoreGui Lua files here. Gitignored.
+# Filename is the assetId, e.g. 12345.lua
+# Extract from a 2018M client install, or use the wiki's
+# Resources/CoreScripts_2010_-_2019.7z archive.

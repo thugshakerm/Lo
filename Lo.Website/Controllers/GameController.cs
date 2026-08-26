@@ -1,0 +1,182 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Xml.Linq;
+using Lo.Website.Code.Config;
+using Lo.Rcc;
+using Lo.Website.Code.Sign;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+
+namespace Lo.Website.Controllers;
+
+/// <summary>
+/// The join flow — heart of a 2018M revival.
+///
+/// When a user clicks Play, the client makes this sequence:
+///
+///   1. /Login/Negotiate.ashx (with the user's auth ticket)  -> AuthController
+///   2. /Game/PlaceLauncher.ashx (or /Game/Join.ashx)        -> THIS class
+///      We: OpenJob on RCC, get back a jobId + port + baseUrl
+///      We: return a join ticket to the client
+///   3. Client connects to game-server:port over RakNet (direct UDP, not us)
+///   4. /Game/Gameserver.lua (fetched by the server-side Lua) -> THIS class
+///      We: serve the Lua body, signed
+///
+/// Source: wiki/infrastructure/api/joinscript.md.
+/// </summary>
+public static class GameController
+{
+    public static void Map(RouteGroupBuilder g)
+    {
+        g.MapGet("/Game/PlaceLauncher.ashx",  PlaceLauncher);
+        g.MapGet("/Game/Join.ashx",           Join);
+        g.MapGet("/Game/Studio.ashx",         Studio);
+        g.MapGet("/Game/Gameserver.lua",      GameserverLua);
+        g.MapGet("/Game/Gameserver.json",     GameserverJson);
+        g.MapGet("/Game/Visit.ashx",          Visit);
+    }
+
+    /// <summary>
+    /// GET /Game/PlaceLauncher.ashx
+    /// Open a job on RCC and return a join ticket.
+    /// </summary>
+    private static async Task<IResult> PlaceLauncher(
+        HttpContext ctx, RccClient rcc, KeyManager keys, RevivalConfig cfg)
+    {
+        var placeId    = ParseLong(ctx, "placeId", "PlaceID");
+        var universeId = ParseLong(ctx, "universeId", "UniverseID");
+        var userId     = ParseLong(ctx, "userId", "UserID");
+        var jobId      = ctx.Request.Query["jobId"].ToString();
+        if (string.IsNullOrEmpty(jobId)) jobId = ctx.Request.Query["JobID"].ToString();
+
+        if (string.IsNullOrEmpty(jobId))
+        {
+            // New job
+            jobId = "job-" + RandomHex(16);
+            var lease = cfg.Rcc.DefaultLeaseSeconds;
+            var cores = cfg.Rcc.DefaultCores;
+            var job = new Job(jobId, lease, 0, cores);
+            var lua = BuildOpenJobLua(placeId, universeId, userId, jobId, cfg);
+            var r = await rcc.OpenJobAsync(job, lua, (int)placeId);
+            if (r is null)
+            {
+                return Results.Content(PlaceLauncherErrorXml("RCC refused to open job"),
+                    "application/xml", null, 500);
+            }
+        }
+        var ticket = BuildJoinTicket(placeId, jobId, userId, keys);
+        return Results.Content(PlaceLauncherOkXml(placeId, jobId, ticket), "application/xml");
+    }
+
+    private static Task<IResult> Join(HttpContext ctx, RccClient rcc, KeyManager keys, RevivalConfig cfg) =>
+        PlaceLauncher(ctx, rcc, keys, cfg);
+
+    private static Task<IResult> Studio(HttpContext ctx, RccClient rcc, KeyManager keys, RevivalConfig cfg) =>
+        PlaceLauncher(ctx, rcc, keys, cfg);
+
+    /// <summary>
+    /// GET /Game/Gameserver.lua
+    /// The Lua body that runs in the game server's Lua VM at boot.
+    /// </summary>
+    private static IResult GameserverLua(SecurityNotary notary)
+    {
+        var path = @"C:\lo\storage\rbx\files\gameserver.lua";
+        if (!File.Exists(path))
+        {
+            return Results.Content(notary.SignScript(
+                "-- Lo revival gameserver.lua placeholder. Drop your real gameserver.lua into C:\\lo\\storage\\rbx\\files\\gameserver.lua",
+                FormatVersion.V2), "text/plain");
+        }
+        var body = File.ReadAllText(path);
+        return Results.Content(notary.SignScript(body, FormatVersion.V2), "text/plain");
+    }
+
+    /// <summary>
+    /// GET /Game/Gameserver.json
+    /// Companion JSON config (maxPlayers override, etc.).
+    /// </summary>
+    private static IResult GameserverJson(RevivalConfig cfg)
+    {
+        return Results.Json(new
+        {
+            maxPlayers = 20,
+            version    = cfg.Lua.Version
+        });
+    }
+
+    private static IResult Visit(HttpContext ctx) =>
+        Results.Content("<?xml version=\"1.0\" encoding=\"UTF-8\"?><ok/>", "application/xml");
+
+    // ── helpers ─────────────────────────────────────────────────
+
+    private static long ParseLong(HttpContext ctx, params string[] keys)
+    {
+        long v = 0;
+        foreach (var k in keys)
+        {
+            var s = ctx.Request.Query[k].ToString();
+            if (!string.IsNullOrEmpty(s) && long.TryParse(s, out v)) return v;
+        }
+        return 0;
+    }
+
+    private static ScriptExecution BuildOpenJobLua(long placeId, long universeId, long userId, string jobId, RevivalConfig cfg)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("-- Auto-generated by Lo.Website.Controllers.GameController.PlaceLauncher");
+        sb.AppendLine($"game:SetPlaceId({placeId}, true)");
+        sb.AppendLine($"game:SetUniverseId({universeId})");
+        sb.AppendLine($"print(\"Lo revival: starting place {placeId} as user {userId}, job {jobId}\")");
+        return new ScriptExecution("OpenJob", sb.ToString());
+    }
+
+    private static string BuildJoinTicket(long placeId, string jobId, long userId, KeyManager keys)
+    {
+        // Real Roblox wraps this with a --rbxsig prefix; the patched
+        // client will verify it with our public key. We sign here for
+        // completeness; the 2018L+ ticket patch makes verification a
+        // no-op anyway.
+        var raw = $"placeId={placeId};jobId={jobId};userId={userId}";
+        try
+        {
+            var rsa = keys.PrivateKey();
+            var sig = rsa.SignData(Encoding.UTF8.GetBytes(raw), keys.Algorithm(), RSASignaturePadding.Pkcs1);
+            var b64 = Convert.ToBase64String(sig);
+            return $"--rbxsig{b64}%{raw}";
+        }
+        catch
+        {
+            return raw;
+        }
+    }
+
+    private static string PlaceLauncherOkXml(long placeId, string jobId, string ticket)
+    {
+        XNamespace x = "http://www.roblox.com";
+        return new XDocument(
+            new XDeclaration("1.0", "UTF-8", null),
+            new XElement(x + "PlaceLauncherResult",
+                new XElement(x + "PlaceId", placeId),
+                new XElement(x + "JobId",   jobId),
+                new XElement(x + "Ticket",  ticket)
+            )
+        ).ToString();
+    }
+
+    private static string PlaceLauncherErrorXml(string msg)
+    {
+        XNamespace x = "http://www.roblox.com";
+        return new XDocument(
+            new XDeclaration("1.0", "UTF-8", null),
+            new XElement(x + "Error", new XElement(x + "Message", msg))
+        ).ToString();
+    }
+
+    private static string RandomHex(int bytes)
+    {
+        var buf = new byte[bytes];
+        RandomNumberGenerator.Fill(buf);
+        return Convert.ToHexString(buf).ToLowerInvariant();
+    }
+}

@@ -46,8 +46,18 @@ discord  <-->  bot.py  <-->  Render proxy (proxy/proxy.py)  <-->  madxka.com
 ```
 
 The proxy (a tiny aiohttp app) forwards every request to MadXka with a normal
-browser User-Agent and serves the badge svgs. The bot talks only to the proxy,
+browser User-Agent and serves the badge files. The bot talks only to the proxy,
 so Cloudflare in front of MadXka never sees the Discord bot.
+
+Two quirks it handles on its own:
+
+- **Brotli**: MadXka/Cloudflare happily answer `Content-Encoding: br`. The
+  proxy never forwards your `Accept-Encoding` — it always asks upstream for
+  `gzip, deflate` — and the `Brotli` package is installed anyway as a safety
+  net.
+- **Badges**: the four badge files are also embedded in `proxy.py` as base64
+  text, so `/badges/*` keeps working even if the files are missing from the
+  deployed image. `GET /debug` shows what's on disk vs what's embedded.
 
 ## 1. Deploy the proxy on Render
 
@@ -62,31 +72,36 @@ manually:
 - Health check path: `/health`
 
 You get `https://<name>.onrender.com`. Sanity check:
-`https://<name>.onrender.com/health` and `.../badges/verified.svg`.
+`https://<name>.onrender.com/health`, `.../badges/verified.svg` and
+`.../debug` (shows upstream + which badge files are on disk).
 
-## 2. Set up the bot
+## 2. Set up the bot on a Windows VPS
 
-1. Create a bot at <https://discord.com/developers>, copy the token.
-   No privileged gateway intents are needed (slash commands only).
-2. Install and configure:
+Everything is one double-click. Get `madxka-bot.bat` onto the VPS
+(e.g. `curl -o madxka-bot.bat https://github.com/thugshakerm/Lo/raw/arena/01a03fb3-lo/madxka-bot.bat`
+or download it from the GitHub page), then run it. It will:
 
-   ```bash
-   python3 -m venv .venv
-   .venv/bin/pip install -r requirements.txt
-   cp .env.example .env   # set DISCORD_TOKEN and MADXKA_BASE_URL to your proxy url
-   ```
+1. check Python is installed (if not: `winget install Python.Python.3.12`,
+   tick "Add python.exe to PATH")
+2. `git clone --branch arena/01a03fb3-lo https://github.com/thugshakerm/Lo.git madxka-bot`
+   (or pull the latest if already cloned)
+3. create a `.venv` and install the dependencies
+4. ask for your **Discord bot token** (from
+   <https://discord.com/developers> → your app → Bot → Reset Token), the
+   **proxy URL** (defaults to `https://ma-ly00.onrender.com`) and an optional
+   **server ID** for instant command sync
+5. write `.env` and start the bot
 
-3. Invite the bot with the `bot` + `applications.commands` scopes and the
-   **Send Messages / Embed Links / Attach Files** permissions.
-4. Run:
+Every later run just pulls the latest and starts the bot with the saved
+`.env`. To keep it running automatically, schedule `madxka-bot.bat` at
+logon (Task Scheduler) or run it under NSSM as a service.
 
-   ```bash
-   .venv/bin/python bot.py
-   ```
+Linux/other: `python3 -m venv .venv && .venv/bin/pip install -r
+requirements.txt && cp .env.example .env && .venv/bin/python bot.py`.
 
-   Global command sync can take a few minutes to show up. For instant
-   (re)sync during development, set `DISCORD_GUILD_ID` in `.env` to your
-   server ID.
+Invite the bot with the `bot` + `applications.commands` scopes and the
+**Send Messages / Embed Links / Attach Files** permissions. Global command
+sync can take a few minutes to show up.
 
 ## Endpoints used (bubbablox v2, same as madxka.com)
 

@@ -1,1 +1,3 @@
 aiohttp>=3.9,<4
+# needed so aiohttp can decode brotli (br) responses from madxka/cloudflare
+Brotli>=1.1

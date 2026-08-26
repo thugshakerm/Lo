@@ -181,7 +181,13 @@ class MadxkaClient:
                 if resp.status >= 400:
                     detail = (await resp.text())[:200]
                     raise MadxkaError(f"MadXka API returned {resp.status}: {detail}")
-                return await resp.json(content_type=None)
+                try:
+                    return await resp.json(content_type=None)
+                except ValueError as exc:  # JSONDecodeError / ContentTypeError...
+                    snippet = (await resp.text(errors="replace"))[:120]
+                    raise MadxkaError(
+                        f"MadXka API returned non-JSON from {path}: {snippet!r}"
+                    ) from exc
         except aiohttp.ClientError as exc:
             raise MadxkaError(f"could not reach {self.base_url} ({exc})") from exc
 

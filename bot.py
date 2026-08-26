@@ -164,7 +164,7 @@ def on_cooldown(user_id: int) -> bool:
 
 
 def truncate(text: str, limit: int = 1024) -> str:
-    text = (text or "").strip()
+    text = str(text or "").strip()
     if len(text) <= limit:
         return text or "No description."
     return text[: limit - 1].rstrip() + "…"
@@ -501,7 +501,9 @@ async def on_app_command_error(
     if isinstance(error, (madxka.MadxkaError, discord.HTTPException)):
         return  # already handled (or nothing to do)
     log.exception("unhandled app command error", exc_info=error)
-    message = "🤔 something went wrong on my end. try again in a bit."
+    # include the exception type so it's diagnosable from the chat message;
+    # the full traceback goes to the bot console
+    message = f"🤔 something went wrong on my end ({type(error).__name__}). try again in a bit."
     if interaction.response.is_done():
         await interaction.followup.send(message, ephemeral=True)
     else:

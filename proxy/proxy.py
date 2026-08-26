@@ -48,15 +48,50 @@ USER_AGENT = (
 # request headers worth forwarding upstream.
 # NOTE: accept-encoding is deliberately NOT forwarded — we always ask
 # upstream for gzip/deflate only (see UPSTREAM_ACCEPT_ENCODING).
+# cookie is NOT forwarded either: the proxy manages its own rbxcsrf4 cookie
+# for the CSRF dance (see CsrfStore), and client cookies shouldn't leak upstream.
 FORWARDED_HEADERS = {
     "user-agent",
     "accept",
     "content-type",
-    "cookie",
     "authorization",
-    "x-csrftoken",
+    "x-csrf-token",
 }
 UPSTREAM_ACCEPT_ENCODING = "gzip, deflate"
+
+# MadXka runs bubbablox v2, whose CsrfMiddleware 403s every non-GET request
+# unless it carries a fresh signed `rbxcsrf4` cookie AND a matching
+# `x-csrf-token` header. It answers a failed check with a brand-new pair:
+# Set-Cookie: rbxcsrf4=<jwt>  +  x-csrf-token: <token>.  The proxy keeps the
+# latest pair from every upstream response, sends it with non-GETs, and
+# retries once after a 403.
+CSRF_COOKIE_NAME = "rbxcsrf4"
+
+
+class CsrfStore:
+    """Tracks the bubbablox v2 csrf pair (cookie value + token value)."""
+
+    def __init__(self) -> None:
+        self.cookie: str | None = None
+        self.token: str | None = None
+
+    def refresh_from(self, resp: "aiohttp.ClientResponse") -> None:
+        for set_cookie in resp.headers.getall("Set-Cookie", []):
+            if set_cookie.startswith(CSRF_COOKIE_NAME + "="):
+                value = set_cookie.split(";", 1)[0].split("=", 1)[1]
+                if value:
+                    self.cookie = value
+        token = resp.headers.get("x-csrf-token")
+        if token:
+            self.token = token
+
+    def headers_for(self, method: str) -> dict:
+        if method in ("GET", "HEAD", "OPTIONS") or not (self.cookie and self.token):
+            return {}
+        return {
+            "Cookie": f"{CSRF_COOKIE_NAME}={self.cookie}",
+            "x-csrf-token": self.token,
+        }
 
 # response headers worth forwarding to the client
 RESP_HEADERS = {"content-type", "cache-control", "content-disposition", "set-cookie"}
@@ -210,6 +245,10 @@ async def debug(_request: web.Request) -> web.Response:
             "badges_dir": str(BADGES_DIR),
             "badge_files_on_disk": files,
             "embedded_fallbacks": sorted(list(_EMBEDDED_PNG) + list(_EMBEDDED_SVG)),
+            "csrf": {
+                "cookie_loaded": bool(_request.app["csrf"].cookie),
+                "token_loaded": bool(_request.app["csrf"].token),
+            },
         }
     )
 
@@ -231,28 +270,39 @@ async def proxy(request: web.Request) -> web.StreamResponse:
     """Pass the request (path, query, method, body) through to madxka."""
     url = UPSTREAM + request.raw_path
     body = await request.read()
-    headers = {k: v for k, v in request.headers.items() if k.lower() in FORWARDED_HEADERS}
-    headers["User-Agent"] = USER_AGENT
-    headers["Accept-Encoding"] = UPSTREAM_ACCEPT_ENCODING
+    is_safe = request.method in ("GET", "HEAD", "OPTIONS")
     session: aiohttp.ClientSession = request.app["session"]
-    try:
-        async with session.request(
-            request.method,
-            url,
-            headers=headers,
-            data=body or None,
-            timeout=aiohttp.ClientTimeout(total=30),
-        ) as resp:
-            payload = await resp.read()
-            out = {k: v for k, v in resp.headers.items() if k.lower() in RESP_HEADERS}
-            return web.Response(status=resp.status, body=payload, headers=out)
-    except aiohttp.ClientError as exc:
-        return web.Response(status=502, text=f"upstream error: {exc}")
+    csrf: CsrfStore = request.app["csrf"]
+    for attempt in (0, 1):
+        headers = {k: v for k, v in request.headers.items() if k.lower() in FORWARDED_HEADERS}
+        headers["User-Agent"] = USER_AGENT
+        headers["Accept-Encoding"] = UPSTREAM_ACCEPT_ENCODING
+        headers.update(csrf.headers_for(request.method))
+        try:
+            async with session.request(
+                request.method,
+                url,
+                headers=headers,
+                data=body or None,
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as resp:
+                csrf.refresh_from(resp)
+                # csrf failed (403 "Token Validation Failed"): the response
+                # carried a fresh cookie+token — retry once with them
+                if not is_safe and resp.status == 403 and attempt == 0:
+                    continue
+                payload = await resp.read()
+                out = {k: v for k, v in resp.headers.items() if k.lower() in RESP_HEADERS}
+                return web.Response(status=resp.status, body=payload, headers=out)
+        except aiohttp.ClientError as exc:
+            return web.Response(status=502, text=f"upstream error: {exc}")
+    raise AssertionError("unreachable: proxy retry loop")
 
 
 async def on_startup(app: web.Application) -> None:
     app["session"] = aiohttp.ClientSession()
     app["badges"] = BadgeStore(app["session"])
+    app["csrf"] = CsrfStore()
 
 
 async def on_cleanup(app: web.Application) -> None:

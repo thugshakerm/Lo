@@ -58,6 +58,11 @@ Two quirks it handles on its own:
 - **Badges**: the four badge files are also embedded in `proxy.py` as base64
   text, so `/badges/*` keeps working even if the files are missing from the
   deployed image. `GET /debug` shows what's on disk vs what's embedded.
+- **CSRF**: MadXka's bubbablox-v2 `CsrfMiddleware` 403s every POST/PUT unless
+  it carries a fresh `rbxcsrf4` cookie + matching `x-csrf-token` header. The
+  proxy keeps the latest pair from upstream responses and does the
+  fail-then-retry dance automatically, so plain POSTs from the bot just work.
+  (`/debug` shows whether the csrf pair is currently loaded.)
 
 ## 1. Deploy the proxy on Render
 

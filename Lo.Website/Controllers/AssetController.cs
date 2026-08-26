@@ -28,7 +28,6 @@ public static class AssetController
     public static void Map(RouteGroupBuilder g)
     {
         g.MapGet("/Asset",           Fetch);
-        g.MapGet("/Asset/",          Fetch);
         g.MapGet("/Asset/{id:long}", FetchById);
     }
 

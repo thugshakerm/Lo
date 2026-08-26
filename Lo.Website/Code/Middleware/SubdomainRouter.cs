@@ -53,12 +53,23 @@ public class SubdomainRouter
 }
 
 /// <summary>
-/// Attached to route groups (via .WithMetadata(new SubdomainKey("www"))).
-/// The SubdomainRouter middleware uses it to require a particular
+/// Attached to route groups (via .WithMetadata(new SubdomainKey("www", "assetgame"))).
+/// The SubdomainGuard middleware uses it to require a particular
 /// subdomain on the request's Host header. Mismatches get a 404.
 /// </summary>
 public class SubdomainKey
 {
-    public string Key { get; }
-    public SubdomainKey(string key) { Key = key; }
+    public string[] Allowed { get; }
+    public string Key => Allowed.FirstOrDefault() ?? "";
+
+    public SubdomainKey(params string[] allowed)
+    {
+        Allowed = allowed;
+    }
+
+    public bool IsAllowed(string? subdomain)
+    {
+        if (string.IsNullOrEmpty(subdomain)) return false;
+        return Allowed.Any(a => string.Equals(a, subdomain, StringComparison.OrdinalIgnoreCase));
+    }
 }

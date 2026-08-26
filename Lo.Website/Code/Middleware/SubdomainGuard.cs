@@ -34,21 +34,16 @@ public class SubdomainGuard
             await _next(ctx);
             return;
         }
-        var required = ep.Metadata.GetMetadata<SubdomainKey>()?.Key;
-        if (required is null)
+        var key = ep.Metadata.GetMetadata<SubdomainKey>();
+        if (key is null)
         {
             await _next(ctx);
             return;
         }
         var actual = ctx.Items["subdomain"] as string;
-        if (string.IsNullOrEmpty(actual))
+        if (!key.IsAllowed(actual))
         {
-            // Bare apex hit an endpoint that requires a subdomain. 404.
-            ctx.Response.StatusCode = 404;
-            return;
-        }
-        if (!string.Equals(actual, required, StringComparison.OrdinalIgnoreCase))
-        {
+            // Subdomain mismatch or bare apex hit an endpoint that requires a subdomain. 404.
             ctx.Response.StatusCode = 404;
             return;
         }

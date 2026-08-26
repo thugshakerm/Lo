@@ -27,13 +27,9 @@ public static class AssetController
 {
     public static void Map(RouteGroupBuilder g)
     {
-        g.MapGet("/Asset",                    Fetch);
-        g.MapGet("/Asset/",                   Fetch);
-        g.MapGet("/asset",                    Fetch);
-        g.MapGet("/asset/",                   Fetch);
-        g.MapGet("/Asset/{id:long}",          FetchById);
-        g.MapGet("/asset/{id:long}",          FetchById);
-        g.MapMethods("/Asset/{id:long}",      new[] { "GET", "HEAD" }, FetchById);
+        g.MapGet("/Asset",           Fetch);
+        g.MapGet("/Asset/",          Fetch);
+        g.MapGet("/Asset/{id:long}", FetchById);
     }
 
     private static Task<IResult> Fetch(HttpContext ctx, AppDb db, SecurityNotary notary) =>

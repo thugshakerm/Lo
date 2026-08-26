@@ -24,9 +24,7 @@ public static class AvatarController
     public static void Map(RouteGroupBuilder g)
     {
         g.MapGet("/Asset/CharacterFetch.ashx", CharacterFetch);
-        g.MapGet("/asset/CharacterFetch.ashx", CharacterFetch);
         g.MapGet("/Asset/BodyColors.ashx",     BodyColors);
-        g.MapGet("/asset/BodyColors.ashx",     BodyColors);
     }
 
     private static async Task<IResult> CharacterFetch(HttpContext ctx, AppDb db)

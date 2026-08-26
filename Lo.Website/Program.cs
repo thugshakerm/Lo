@@ -69,6 +69,7 @@ builder.Services.Configure<JsonOptions>(opts =>
 });
 
 var app = builder.Build();
+app.UseDeveloperExceptionPage();
 
 // ── Middleware pipeline ─────────────────────────────────────────────
 app.UseMiddleware<SubdomainRouter>();   // sets HttpContext.Items["subdomain"]
@@ -81,57 +82,33 @@ app.UseMiddleware<SubdomainGuard>();    // after routing, reject mismatches
 app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
 app.MapGet("/", () => Results.Json(new { service = "Lo Revival", era = "2018M", status = "online" }));
 
-// ── 5 subdomain groups (matching routes/rbx.php 1:1) ────────────────
-//
-// Each route group carries a SubdomainKey metadata; the
-// SubdomainGuard middleware rejects requests whose Host: header
-// subdomain doesn't match the route's required subdomain.
-
-RouteGroupBuilder Www() => app.MapGroup("/")
-    .WithMetadata(new SubdomainKey("www"));
+// ── Subdomain route groups ──────────────────────────────────────────
+RouteGroupBuilder WwwAndAssetGame() => app.MapGroup("/")
+    .WithMetadata(new SubdomainKey("www", "assetgame"));
 RouteGroupBuilder Api() => app.MapGroup("/")
     .WithMetadata(new SubdomainKey("api"));
-RouteGroupBuilder AssetGame() => app.MapGroup("/")
-    .WithMetadata(new SubdomainKey("assetgame"));
 RouteGroupBuilder ClientSettings() => app.MapGroup("/")
     .WithMetadata(new SubdomainKey("clientsettingscdn"));
 RouteGroupBuilder Compat() => app.MapGroup("/")
     .WithMetadata(new SubdomainKey("applicationcompatibility"));
 
 // ── www.<domain> + assetgame.<domain> (game/asset/login) ────────────
-Lo.Website.Controllers.AuthController.Map(Www());
-Lo.Website.Controllers.AuthController.Map(AssetGame());
-
-Lo.Website.Controllers.GameController.Map(Www());
-Lo.Website.Controllers.GameController.Map(AssetGame());
-
-Lo.Website.Controllers.GameServerApiController.Map(Www());
-Lo.Website.Controllers.GameServerApiController.Map(AssetGame());
-
-Lo.Website.Controllers.AssetController.Map(Www());
-Lo.Website.Controllers.AssetController.Map(AssetGame());
-
-Lo.Website.Controllers.AvatarController.Map(Www());
-Lo.Website.Controllers.AvatarController.Map(AssetGame());
-
-Lo.Website.Controllers.ThumbnailController.Map(Www());
-Lo.Website.Controllers.ThumbnailController.Map(AssetGame());
-
-Lo.Website.Controllers.InsertController.Map(Www());
-Lo.Website.Controllers.InsertController.Map(AssetGame());
-
-Lo.Website.Controllers.LuaWebController.Map(Www());
-Lo.Website.Controllers.LuaWebController.Map(AssetGame());
-
-Lo.Website.Controllers.GamePassController.Map(Www());
-Lo.Website.Controllers.GamePassController.Map(AssetGame());
-
-Lo.Website.Controllers.BadgesController.Map(Www());
-Lo.Website.Controllers.BadgesController.Map(AssetGame());
+var gameGroup = WwwAndAssetGame();
+Lo.Website.Controllers.AuthController.Map(gameGroup);
+Lo.Website.Controllers.GameController.Map(gameGroup);
+Lo.Website.Controllers.GameServerApiController.Map(gameGroup);
+Lo.Website.Controllers.AssetController.Map(gameGroup);
+Lo.Website.Controllers.AvatarController.Map(gameGroup);
+Lo.Website.Controllers.ThumbnailController.Map(gameGroup);
+Lo.Website.Controllers.InsertController.Map(gameGroup);
+Lo.Website.Controllers.LuaWebController.Map(gameGroup);
+Lo.Website.Controllers.GamePassController.Map(gameGroup);
+Lo.Website.Controllers.BadgesController.Map(gameGroup);
 
 // ── api.<domain> ────────────────────────────────────────────────────
-Lo.Website.Controllers.PlaceController.Map(Api());
-Lo.Website.Controllers.MarketplaceController.Map(Api());
+var apiGroup = Api();
+Lo.Website.Controllers.PlaceController.Map(apiGroup);
+Lo.Website.Controllers.MarketplaceController.Map(apiGroup);
 
 // ── clientsettingscdn.<domain> ──────────────────────────────────────
 Lo.Website.Controllers.SettingController.Map(ClientSettings());

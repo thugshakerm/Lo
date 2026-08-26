@@ -1,0 +1,3 @@
+# keep the bat byte-for-byte (committed with CRLF) so it works whether the
+# user clones it or downloads it from GitHub raw
+madxka-bot.bat binary

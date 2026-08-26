@@ -1,0 +1,214 @@
+=== Lo Revival - Local Smoke Test ===
+
+[1/6] .NET runtime present?
+  dotnet 10.0.400
+
+[2/6] Lo.Website published?
+  Lo.Website.dll: PRESENT
+
+[3/6] W3SVC (IIS) running?
+  W3SVC: RUNNING
+
+[4/6] PostgreSQL connectivity?
+  PostgreSQL: CONNECTED (127.0.0.1:5432/lo)
+
+[5/6] HTTP responses from local IIS?
+  Adding 5 subdomain entries to hosts file...
+  Apex (www): FAILED (500)
+    The remote server returned an error: (500) Internal Server Error.
+  FFlags: FAILED (500)
+    The remote server returned an error: (500) Internal Server Error.
+  Compat: FAILED (500)
+    The remote server returned an error: (500) Internal Server Error.
+  Asset (no id): FAILED (500)
+    The remote server returned an error: (500) Internal Server Error.
+  Negotiate: FAILED (500)
+    The remote server returned an error: (500) Internal Server Error.
+  Healthz (any): FAILED (404)
+    The remote server returned an error: (404) Not Found.
+
+[6/6] RSA key present?
+  RSA private key: PRESENT
+
+=== Done ===
+PS C:\inetpub\lo> ^C
+PS C:\inetpub\lo> # 1. Check the latest ASP.NET Core / IIS event log errors
+>> Get-EventLog -LogName Application -Source "*AspNetCore*" -Newest 3 | Format-List TimeGenerated, Message
+>>
+>> # 2. Check if any stdout logs were written
+>> if (Test-Path C:\inetpub\logs) {
+>>     Get-ChildItem C:\inetpub\logs -Recurse -Filter "*.log" | Select-Object -First 1 | Get-Content
+>> }
+>>
+>> # 3. Test running the app directly to see any startup exception
+>> Set-Location C:\inetpub\lo-website
+>> dotnet Lo.Website.dll
+
+
+TimeGenerated : 8/26/2026 7:38:59 AM
+Message       : Failed to start application '/LM/W3SVC/5/ROOT', ErrorCode '0x80004005'.
+
+TimeGenerated : 8/26/2026 7:38:59 AM
+Message       : Only one in-process application is allowed per IIS application pool. Please assign the application
+                '/LM/W3SVC/5/ROOT' to a different IIS application pool.
+
+TimeGenerated : 8/26/2026 7:38:59 AM
+Message       : Failed to start application '/LM/W3SVC/4/ROOT', ErrorCode '0x80004005'.
+
+
+
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 08:25:52
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 08:25:52 13.140.161.125 POST /SDK/webLanguage - 80 - 183.82.103.194 - - 404 0 2 346
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 09:07:34
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 09:07:34 13.140.161.125 GET /developmentserver/metadatauploader - 80 - 20.15.224.64 Mozilla/5.0+zgrab/0.x - 404 0 2 229
+2026-08-22 09:19:44 13.140.161.125 GET / - 80 - 45.198.224.26 Mozilla/5.0+(X11;+Linux+x86_64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/126.0.0.0+Safari/537.36 http://13.140.161.125:80/cgi-bin/index2.asp 200 0 0 18
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 11:02:59
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 11:02:59 13.140.161.125 GET / - 80 - 185.242.226.113 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/88.0.4324.190+Safari/537.36 - 200 0 0 125
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 11:24:48
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 11:24:48 13.140.161.125 GET / - 80 - 216.183.54.159 Mozilla/5.0+(Windows+NT+10.0;+WOW64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/52.0.2743.116+Safari/537.36 - 200 0 0 264
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 12:33:21
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 12:33:21 13.140.161.125 GET / - 80 - 160.119.69.16 Mozilla/5.0 - 200 0 0 134
+2026-08-22 12:43:20 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 15
+2026-08-22 12:52:06 13.140.161.125 GET /ui/ - 80 - 23.236.210.22 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36 - 404 0 2 109
+2026-08-22 12:52:06 13.140.161.125 GET / - 80 - 23.236.210.22 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36 - 200 0 0 95
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 13:08:47
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 13:08:47 13.140.161.125 GET / - 80 - 44.201.127.28 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/136.0.0.0+Safari/537.36 - 200 0 0 106
+2026-08-22 13:12:56 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 16
+2026-08-22 13:20:48 13.140.161.125 GET / - 80 - 45.198.224.26 Mozilla/5.0+(X11;+Linux+x86_64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/126.0.0.0+Safari/537.36 http://13.140.161.125:80/cgi-bin/index2.asp 200 0 0 16
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 14:05:12
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 14:05:12 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 132
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 14:52:58
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 14:52:58 13.140.161.125 GET /login - 80 - 45.198.224.26 Go-http-client/1.1 - 404 0 2 115
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 15:44:37
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 15:44:37 13.140.161.125 GET / - 80 - 205.210.31.197 Hello+from+Palo+Alto+Networks,+find+out+more+about+our+scans+in+https://docs-cortex.paloaltonetworks.com/r/1/Cortex-Xpanse/Scanning-activity - 200 0 0 383
+2026-08-22 15:50:27 13.140.161.125 GET / - 80 - 151.243.11.230 Mozilla/5.0+(compatible;+FlowIQLabsBot/1.0;++https://flowiq-labs.com/scanning-info) - 200 0 0 63
+2026-08-22 15:50:33 13.140.161.125 GET /favicon.ico - 80 - 151.243.11.230 Mozilla/5.0+(compatible;+FlowIQLabsBot/1.0;++https://flowiq-labs.com/scanning-info) - 404 0 2 17
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 16:36:23
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 16:36:23 13.140.161.125 POST /hello.world %ADd+allow_url_include%3d1+%ADd+auto_prepend_file%3dphp://input 80 - 193.228.225.219 libredtail-http - 404 0 2 197
+2026-08-22 16:36:23 13.140.161.125 POST / %ADd+allow_url_include%3d1+%ADd+auto_prepend_file%3dphp://input 80 - 193.228.225.219 libredtail-http - 405 0 1 24
+2026-08-22 16:36:23 13.140.161.125 POST /index.php %25ADd+allow_url_include%3D1+%25ADd+auto_prepend_file%3Dphp://input 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:25 13.140.161.125 POST /test.hello %25ADd+allow_url_include%3D1+%25ADd+auto_prepend_file%3Dphp://input 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:25 13.140.161.125 POST /index.php -d+allow_url_include%3don+-d+auto_prepend_file%3dphp%3a//input 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:26 13.140.161.125 GET /vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:26 13.140.161.125 GET /vendor/phpunit/phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 23
+2026-08-22 16:36:27 13.140.161.125 GET /vendor/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:27 13.140.161.125 GET /vendor/phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:27 13.140.161.125 GET /vendor/phpunit/phpunit/LICENSE/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:28 13.140.161.125 GET /vendor/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:28 13.140.161.125 GET /phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:28 13.140.161.125 GET /phpunit/phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:29 13.140.161.125 GET /phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 23
+2026-08-22 16:36:29 13.140.161.125 GET /phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:29 13.140.161.125 GET /lib/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 23
+2026-08-22 16:36:29 13.140.161.125 GET /lib/phpunit/phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:30 13.140.161.125 GET /lib/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:30 13.140.161.125 GET /lib/phpunit/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:30 13.140.161.125 GET /lib/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:32 13.140.161.125 GET /laravel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:32 13.140.161.125 GET /www/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:32 13.140.161.125 GET /ws/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:32 13.140.161.125 GET /yii/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:33 13.140.161.125 GET /zend/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:33 13.140.161.125 GET /ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:33 13.140.161.125 GET /V2/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:33 13.140.161.125 GET /tests/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:33 13.140.161.125 GET /test/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:34 13.140.161.125 GET /testing/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:34 13.140.161.125 GET /api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:34 13.140.161.125 GET /demo/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:34 13.140.161.125 GET /cms/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:35 13.140.161.125 GET /crm/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:35 13.140.161.125 GET /admin/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:35 13.140.161.125 GET /backup/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 25
+2026-08-22 16:36:35 13.140.161.125 GET /blog/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 23
+2026-08-22 16:36:35 13.140.161.125 GET /workspace/drupal/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:36 13.140.161.125 GET /panel/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:36 13.140.161.125 GET /public/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:36 13.140.161.125 GET /apps/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:36 13.140.161.125 GET /app/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php - 80 - 193.228.225.219 libredtail-http - 404 0 2 23
+2026-08-22 16:36:36 13.140.161.125 GET /index.php s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:36 13.140.161.125 GET /public/index.php s=/index/\think\app/invokefunction&function=call_user_func_array&vars[0]=md5&vars[1][]=Hello 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:37 13.140.161.125 GET /index.php lang=../../../../../../../../usr/local/lib/php/pearcmd&+config-create+/&/<?echo(md5("hi"));?>+/tmp/index1.php 80 - 193.228.225.219 libredtail-http - 404 0 2 22
+2026-08-22 16:36:37 13.140.161.125 GET /index.php lang=../../../../../../../../tmp/index1 80 - 193.228.225.219 libredtail-http - 404 0 2 21
+2026-08-22 16:36:37 13.140.161.125 GET /containers/json - 80 - 193.228.225.219 libredtail-http - 404 0 2 27
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 17:28:21
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 17:28:21 13.140.161.125 GET /api/status - 80 - 54.179.178.78 Mozilla/5.0+(compatible;+Cloudflare) - 404 0 2 348
+2026-08-22 17:40:45 13.140.161.125 GET / - 80 - 198.235.24.181 Hello+from+Palo+Alto+Networks,+find+out+more+about+our+scans+in+https://docs-cortex.paloaltonetworks.com/r/1/Cortex-Xpanse/Scanning-activity - 200 0 0 17
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 19:37:12
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 19:37:12 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 138
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 20:27:51
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 20:27:51 13.140.161.125 POST /%77eb%75i_%77sma_Http - 80 - 172.110.223.73 CVE-2023-20198 - 404 11 0 203
+2026-08-22 20:41:25 13.140.161.125 GET /api/public/downloads/recommended/file - 80 - 161.35.146.254 Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10_15_7)+AppleWebKit/605.1.15+(KHTML,+like+Gecko)+Version/16.4+Safari/605.1.15 - 404 0 2 60
+2026-08-22 20:48:48 13.140.161.125 GET / - 80 - 185.242.226.113 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/88.0.4324.190+Safari/537.36 - 200 0 0 14
+2026-08-22 20:55:06 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 16
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 21:14:20
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 21:14:20 13.140.161.125 GET / - 80 - 103.234.62.52 Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10.14;+rv:70.0)+Gecko/20100101+Firefox/70.0 - 200 0 0 200
+2026-08-22 21:14:20 13.140.161.125 GET /favicon.ico - 80 - 103.234.62.52 Mozilla/5.0+(Macintosh;+Intel+Mac+OS+X+10.14;+rv:70.0)+Gecko/20100101+Firefox/70.0 - 404 0 2 196
+2026-08-22 21:16:04 13.140.161.125 GET /favicon.ico - 80 - 103.234.62.52 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/137.0.0.0+Safari/537.36 - 404 0 2 153
+2026-08-22 21:20:51 13.140.161.125 GET / - 80 - 151.243.11.230 Mozilla/5.0+(compatible;+FlowIQLabsBot/1.0;++https://flowiq-labs.com/scanning-info) - 200 0 0 62
+2026-08-22 21:20:53 13.140.161.125 GET /favicon.ico - 80 - 151.243.11.230 Mozilla/5.0+(compatible;+FlowIQLabsBot/1.0;++https://flowiq-labs.com/scanning-info) - 404 0 2 20
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 21:37:46
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 21:37:46 13.140.161.125 GET / - 80 - 45.77.61.56 Mozilla/5.0+(compatible;+CyberConvoyScout/1.0;++https://scout.cyberconvoy.co) - 200 0 0 12
+2026-08-22 21:41:33 13.140.161.125 GET /SDK/webLanguage - 80 - 5.61.209.44 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/90.0.4430.85+Safari/537.36+Edg/90.0.818.46 - 404 0 2 12
+2026-08-22 21:42:09 13.140.161.125 GET / - 80 - 185.247.137.242 Mozilla/5.0+(compatible;+InternetMeasurement/1.0;++https://internet-measurement.com/) - 200 0 0 27
+2026-08-22 21:46:24 13.140.161.125 GET / - 80 - 93.174.93.12 Mozilla/5.0+(Windows+NT+6.1;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/73.0.3683.75+Safari/537.36 - 200 0 1236 13200
+2026-08-22 21:52:59 13.140.161.125 GET / - 80 - 45.198.224.26 Mozilla/5.0+(X11;+Linux+x86_64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/126.0.0.0+Safari/537.36 http://13.140.161.125:80/cgi-bin/index2.asp 200 0 0 17
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 22:09:50
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 22:09:50 13.140.161.125 GET / - 80 - 18.97.19.241 Mozilla/5.0+(Windows+NT+6.2;en-US)+AppleWebKit/537.32.36+(KHTML,+live+Gecko)+Chrome/52.0.3096.68+Safari/537.32 - 200 0 0 93
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 22:25:21
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-08-22 22:25:21 13.140.161.125 GET /.env - 80 - 77.83.39.24 Mozilla/5.0+(iPad;+CPU+OS+12_4+like+Mac+OS+X)+AppleWebKit/605.1.15+(KHTML,+like+Gecko)+Mobile/15E148+Flipboard/4.2.48 - 404 0 2 59
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-08-22 22:47:24
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status ti

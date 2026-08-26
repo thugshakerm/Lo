@@ -294,8 +294,7 @@ Write-Host "2. Apply the database schema:" -ForegroundColor Yellow
 Write-Host "   psql -U lo -d lo -f C:\inetpub\lo\db\schema.sql"
 Write-Host ""
 Write-Host "3. Generate the RSA keypair (1024-bit):" -ForegroundColor Yellow
-Write-Host "   openssl genrsa -out C:\lo\storage\privateKey1024.pem 1024"
-Write-Host "   openssl rsa -in C:\lo\storage\privateKey1024.pem -pubout -outform DER | base64 -w 0 > C:\lo\storage\publicKeyBlob.txt"
+Write-Host "   powershell -File .\deploy\windows\generate-keys.ps1"
 Write-Host ""
 Write-Host "4. Drop your 2018M gameserver.lua at C:\lo\storage\rbx\files\gameserver.lua"
 Write-Host "   (already copied from the repo as a placeholder)"

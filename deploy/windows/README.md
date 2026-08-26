@@ -29,7 +29,7 @@ revival backend to a **Windows VPS**.
 │
 ├─ 3. php artisan migrate (creates the database tables)
 │
-├─ 4. openssl genrsa ...  (generates the RSA keypair)
+├─ 4. .\deploy\windows\generate-keys.ps1 (generates RSA keypair via .NET 10)
 │
 ├─ 5. test-local.ps1      (smoke test everything locally)
 │
@@ -108,9 +108,9 @@ private key goes into `C:\lo\storage\privateKey1024.pem`.
 
 Generate with:
 ```powershell
-openssl genrsa -out C:\lo\storage\privateKey1024.pem 1024
-openssl rsa -in C:\lo\storage\privateKey1024.pem -pubout -outform DER | base64 -w 0 > C:\lo\storage\publicKeyBlob.txt
+.\deploy\windows\generate-keys.ps1
 ```
+(Or run `openssl genrsa -out C:\lo\storage\privateKey1024.pem 1024` if openssl is installed).
 
 ## The 5 subdomains (DNS at Cloudflare)
 

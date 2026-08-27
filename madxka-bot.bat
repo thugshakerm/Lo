@@ -44,6 +44,7 @@ echo [1/3] Updating the bot to the latest...
 where git >nul 2>nul
 if errorlevel 1 goto update_skip
 pushd "%REPO_DIR%"
+git checkout -- . 2>nul
 git pull
 set "PULL_ERR=%errorlevel%"
 popd

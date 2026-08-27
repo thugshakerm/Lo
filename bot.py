@@ -457,7 +457,11 @@ async def run_lookup(interaction: discord.Interaction, builder):
             files = []
         else:
             embed, files = result
-        await interaction.edit_original_response(embed=embed, files=files or None)
+        # edit_original_response can't attach files — the side-by-side badge
+        # images (both-flags case) go out as a followup right below the embed
+        await interaction.edit_original_response(embed=embed)
+        if files:
+            await interaction.followup.send(files=files)
     except madxka.MadxkaError as exc:
         await interaction.edit_original_response(embed=error_embed(f"⚠️ {exc}"))
     except discord.HTTPException:

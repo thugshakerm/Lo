@@ -7,14 +7,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// Game-server-side glue endpoints. The Lua VM running inside the
-/// RCC-spawned child process calls these to register itself,
-/// heartbeat, record visits, and shut down cleanly.
-///
-/// Real Roblox has internal mechanisms for this; revivals expose
-/// them as plain HTTP for ease of patching.
-/// </summary>
 public static class GameServerApiController
 {
     public static void Map(RouteGroupBuilder g)
@@ -70,7 +62,7 @@ public static class GameServerApiController
     private static IResult Visit(string jobId, HttpContext ctx)
     {
         var userId = (long)0; long.TryParse(ctx.Request.Query["userId"], out userId);
-        // For now just log and ack
+
         return Results.Json(new { status = "ok", jobId, userId });
     }
 }

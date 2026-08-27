@@ -7,22 +7,15 @@
     <RootNamespace>Lo.Website</RootNamespace>
     <AssemblyName>Lo.Website</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <!-- XML doc comments go to the output so consumers (and we) can see them -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Database -->
     <PackageReference Include="Npgsql" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      Lo.Rcc is a separate class library that lives under Lo.Libraries/.
-      Mirrors the leaked Roblox.Website layout, where Roblox.Rcc was
-      its own project under Roblox.Libraries/.
-    -->
     <ProjectReference Include="..\Lo.Libraries\Lo.Rcc\Lo.Rcc.csproj" />
   </ItemGroup>
 

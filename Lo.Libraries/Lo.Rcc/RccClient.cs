@@ -5,23 +5,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Lo.Rcc;
 
-/// <summary>
-/// Typed wrapper around the RCCService SOAP endpoint.
-///
-/// The original PHP code used \SoapClient driven by the WSDL at
-/// C:\lo\storage\RCCService.wsdl. In .NET, the WCF equivalent is
-/// heavyweight. Since we only call ~8 methods with a known wire
-/// format, we hand-roll the SOAP body with XDocument and parse the
-/// response the same way. This is ~80 lines instead of ~800, and
-/// the wire format is identical.
-///
-/// Lo.Rcc is a leaf library with no dependencies on Lo.Website.
-/// Persistence (logging faults, recording jobs) is delegated to
-/// IRccCallback, which the website implements.
-///
-/// Source: wiki/rccservice/windows/how2rcc.md (SOAP method reference),
-/// wiki/rccservice/windows/not-expiring-jobs.md (lease renewal pattern).
-/// </summary>
 public class RccClient
 {
     private readonly HttpClient _http;
@@ -37,12 +20,6 @@ public class RccClient
         _cfg  = cfg;
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────
-
-    /// <summary>
-    /// Open a new job on RCC. Spawns a child process and returns a jobId.
-    /// Optionally runs a ScriptExecution on the new job before returning.
-    /// </summary>
     public async Task<string?> OpenJobAsync(Job job, ScriptExecution? script = null, int placeId = 0)
     {
         var doc = new XDocument(
@@ -146,8 +123,6 @@ public class RccClient
         return v is int i ? i : (int)((double?)v ?? 0);
     }
 
-    // ── Status ───────────────────────────────────────────────────
-
     public async Task<string> HelloWorldAsync()
     {
         var doc = new XDocument(
@@ -177,8 +152,6 @@ public class RccClient
         var env = (string?)response.Descendants("environmentCount").FirstOrDefault() ?? "0";
         return (ver, int.TryParse(env, out var n) ? n : 0);
     }
-
-    // ── Internals ────────────────────────────────────────────────
 
     private XElement BuildSoapEnvelope(string method, params XElement?[] body)
     {
@@ -261,7 +234,7 @@ public class RccClient
         var list = response.Descendants(method + "Result").Descendants("LuaValue").ToList();
         if (list.Count == 0)
         {
-            // The response may be wrapped differently
+
             list = response.Descendants("LuaValue").ToList();
         }
         var out_ = new List<LuaValue>();

@@ -5,15 +5,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// api.&lt;domain&gt; — Marketplace endpoints
-///
-/// - /marketplace/productinfo     (set by SetProductInfoUrl in Gameserver.lua)
-/// - /marketplace/productDetails  (set by SetDevProductInfoUrl)
-/// - /ownership/hasasset          (set by SetPlayerOwnsAssetUrl)
-///
-/// Source: wiki/api-docs.md.
-/// </summary>
 public static class MarketplaceController
 {
     public static void Map(RouteGroupBuilder g)
@@ -44,7 +35,7 @@ public static class MarketplaceController
 
     private static IResult ProductDetails(HttpContext ctx)
     {
-        // Dev products: not implemented in the revival yet.
+
         return Results.Json(new { error = "dev products not supported" }, statusCode: 501);
     }
 
@@ -53,7 +44,7 @@ public static class MarketplaceController
         var userId  = (long)0; long.TryParse(ctx.Request.Query["userId"],  out userId);
         var assetId = (long)0; long.TryParse(ctx.Request.Query["assetId"], out assetId);
         if (userId == 0 || assetId == 0) return Results.Json(new { success = false });
-        // TODO: real check via asset_ownership
+
         return Results.Json(new { success = false });
     }
 }

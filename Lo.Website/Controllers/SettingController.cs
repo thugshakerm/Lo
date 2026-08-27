@@ -6,18 +6,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// clientsettingscdn.&lt;domain&gt; endpoints.
-///
-/// The 2018M client requests its FFlag configuration at boot from
-/// /v1/settings/application. We serve a JSON blob from
-/// C:\lo\storage\rbx\fflags\2018M.json (gitignored, deployment-specific).
-///
-/// The /Setting/QuietGet/{bucket} endpoint is the older 2016-era
-/// path, kept for compatibility.
-///
-/// Source: wiki/utilities/fflags-2018.md
-/// </summary>
 public static class SettingController
 {
     public static void Map(RouteGroupBuilder g)
@@ -41,8 +29,7 @@ public static class SettingController
         var path = Path.Combine(@"C:\lo\storage", cfg.Fflags.Path);
         if (!File.Exists(path))
         {
-            // No FFlag file? Return a minimal default that won't
-            // crash the 2018M client.
+
             return new Dictionary<string, object>
             {
                 ["FFlagDebugBuildMode"]         = "False",

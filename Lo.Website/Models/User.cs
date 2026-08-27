@@ -2,10 +2,6 @@ using System.Text.Json;
 
 namespace Lo.Website.Models;
 
-/// <summary>
-/// The user model. Maps to the `users` table.
-/// `avatar` is a JSON column; .NET auto-parses it into a dictionary.
-/// </summary>
 public class User
 {
     public long Id { get; set; }

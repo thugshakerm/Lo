@@ -4,14 +4,6 @@ using Npgsql;
 
 namespace Lo.Website.Code.Data;
 
-/// <summary>
-/// Thin wrapper around Npgsql. The original PHP code uses Eloquent;
-/// we don't need an ORM for the simple queries the revival makes.
-/// Each method maps to a single SQL statement.
-///
-/// All methods are async (the original PHP code is sync; this is a
-/// strict improvement on the Kestrel thread-pool side).
-/// </summary>
 public class AppDb
 {
     private readonly string _connStr;
@@ -147,7 +139,7 @@ public class AppDb
         }
         catch
         {
-            // Don't throw from the logger.
+
         }
     }
 
@@ -168,8 +160,6 @@ public class AppDb
         {
         }
     }
-
-    // ── row readers ───────────────────────────────────────────────
 
     private static User ReadUser(NpgsqlDataReader r)
     {

@@ -1,8 +1,5 @@
 namespace Lo.Website.Models;
 
-/// <summary>
-/// A game pass. Backed by an Asset (asset_type 34).
-/// </summary>
 public class GamePass
 {
     public long Id { get; set; }

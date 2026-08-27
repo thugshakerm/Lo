@@ -1,9 +1,5 @@
 namespace Lo.Rcc;
 
-/// <summary>
-/// A Job description passed to OpenJob / BatchJob.
-/// WSDL shape: {id: string, expirationInSeconds: double, category: int, cores: double}
-/// </summary>
 public class Job
 {
     public string Id { get; }
@@ -20,10 +16,6 @@ public class Job
     }
 }
 
-/// <summary>
-/// A script execution passed to OpenJob / BatchJob / Execute.
-/// WSDL shape: {name: string, script: string, arguments: LuaValue[]}
-/// </summary>
 public class ScriptExecution
 {
     public string Name { get; }

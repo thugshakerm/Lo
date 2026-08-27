@@ -501,14 +501,17 @@ async def on_app_command_error(
     if isinstance(error, (madxka.MadxkaError, discord.HTTPException)):
         return  # already handled (or nothing to do)
     log.exception("unhandled app command error", exc_info=error)
-    # include the exception type + message so it's diagnosable from the chat
-    # message; the full traceback goes to the bot console
-    detail = str(error).replace("\n", " ")[:160] or type(error).__name__
-    message = f"🤔 something went wrong on my end ({detail}). try again in a bit."
+    # the user-visible text is the (intentionally blunt) one-liner; the real
+    # exception details follow as a second ephemeral message for debugging,
+    # and the full traceback goes to the bot console
+    detail = f"{type(error).__name__}: {str(error).replace(chr(10), ' ')[:160]}"
+    message = "yo brk theres an error check ur vps NOW"
     if interaction.response.is_done():
         await interaction.followup.send(message, ephemeral=True)
+        await interaction.followup.send(f"(details: {detail})", ephemeral=True)
     else:
         await interaction.response.send_message(message, ephemeral=True)
+        await interaction.followup.send(f"(details: {detail})", ephemeral=True)
 
 
 @bot.event

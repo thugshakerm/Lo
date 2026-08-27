@@ -44,10 +44,10 @@ BADGES_DIR = Path(__file__).parent / "badges"
 # bot via the x-madxka-cookie header (the bat stores it in .env).
 MADXKA_COOKIE = os.environ.get("MADXKA_COOKIE", "").strip()
 
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-)
+# User-Agent the proxy presents to madxka. "Roblox/WinInet" is what madxka
+# expects to see (classic Roblox client UA) — a browser UA can get different
+# responses.
+USER_AGENT = "Roblox/WinInet"
 
 # request headers worth forwarding upstream.
 # NOTE: accept-encoding is deliberately NOT forwarded — we always ask

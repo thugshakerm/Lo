@@ -1,21 +1,3 @@
--- ─────────────────────────────────────────────────────────────────────
--- Lo Revival - PostgreSQL Schema (consolidated)
--- ─────────────────────────────────────────────────────────────────────
---
--- Single SQL file equivalent of the eight Laravel migrations that
--- previously lived in database/migrations/. Apply with:
---
---   psql -U lo -d lo -f db/schema.sql
---
--- All tables live in the public schema. The C# backend's AppDb.cs
--- queries match these column names exactly.
---
--- ─────────────────────────────────────────────────────────────────────
-
--- ════════════════════════════════════════════════════════════════════
--- USERS
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS users (
     id                  BIGSERIAL PRIMARY KEY,
     name                VARCHAR(255) NOT NULL UNIQUE,
@@ -30,10 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at          TIMESTAMP
 );
 
--- ════════════════════════════════════════════════════════════════════
--- ASSETS (universal — covers all asset types: 2=t-shirt, 8=hat, ...)
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS assets (
     id              BIGSERIAL PRIMARY KEY,
     name            VARCHAR(255) NOT NULL,
@@ -43,7 +21,7 @@ CREATE TABLE IF NOT EXISTS assets (
     price           INTEGER NOT NULL DEFAULT 0,
     is_for_sale     BOOLEAN NOT NULL DEFAULT FALSE,
     is_approved     BOOLEAN NOT NULL DEFAULT FALSE,
-    visibility      CHAR(1) NOT NULL DEFAULT 'n',  -- n=normal, r=restricted, m=moderated, p=pending
+    visibility      CHAR(1) NOT NULL DEFAULT 'n',
     thumb_hash      VARCHAR(255),
     storage_path    VARCHAR(1024),
     mime_type       VARCHAR(255),
@@ -55,10 +33,6 @@ CREATE TABLE IF NOT EXISTS assets (
 );
 CREATE INDEX IF NOT EXISTS assets_browse_idx
     ON assets (asset_type, visibility, is_approved);
-
--- ════════════════════════════════════════════════════════════════════
--- ASSET_OWNERSHIP (user owns asset; many-to-many via explicit table)
--- ════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS asset_ownership (
     id          BIGSERIAL PRIMARY KEY,
@@ -76,10 +50,6 @@ CREATE TABLE IF NOT EXISTS asset_ownership (
 CREATE INDEX IF NOT EXISTS asset_ownership_user_idx ON asset_ownership (user_id);
 CREATE INDEX IF NOT EXISTS asset_ownership_asset_idx ON asset_ownership (asset_id);
 
--- ════════════════════════════════════════════════════════════════════
--- PLACES
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS places (
     id              BIGSERIAL PRIMARY KEY,
     universe_id     BIGINT NOT NULL,
@@ -96,10 +66,6 @@ CREATE TABLE IF NOT EXISTS places (
 );
 CREATE INDEX IF NOT EXISTS places_universe_idx ON places (universe_id);
 
--- ════════════════════════════════════════════════════════════════════
--- GAME_SERVERS (live job tracking)
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS game_servers (
     id                  BIGSERIAL PRIMARY KEY,
     job_id              VARCHAR(255) NOT NULL UNIQUE,
@@ -107,7 +73,7 @@ CREATE TABLE IF NOT EXISTS game_servers (
     port                INTEGER NOT NULL DEFAULT 0,
     max_players         INTEGER NOT NULL DEFAULT 0,
     private_server      BOOLEAN NOT NULL DEFAULT FALSE,
-    status              VARCHAR(32) NOT NULL DEFAULT 'starting',  -- starting, running, shutting_down, dead
+    status              VARCHAR(32) NOT NULL DEFAULT 'starting',
     lease_expires_at    TIMESTAMP NOT NULL,
     last_ping_at        TIMESTAMP NOT NULL,
     created_at          TIMESTAMP,
@@ -115,10 +81,6 @@ CREATE TABLE IF NOT EXISTS game_servers (
 );
 CREATE INDEX IF NOT EXISTS game_servers_status_idx
     ON game_servers (status, lease_expires_at);
-
--- ════════════════════════════════════════════════════════════════════
--- GAME_PASSES (asset_id + creator_id + price)
--- ════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS game_passes (
     id              BIGSERIAL PRIMARY KEY,
@@ -133,10 +95,6 @@ CREATE TABLE IF NOT EXISTS game_passes (
         REFERENCES users(id) ON DELETE SET NULL
 );
 
--- ════════════════════════════════════════════════════════════════════
--- AUDIT_LOG (admin actions + joins for forensics)
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS audit_log (
     id          BIGSERIAL PRIMARY KEY,
     event       VARCHAR(64) NOT NULL,
@@ -148,10 +106,6 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS audit_log_event_idx ON audit_log (event, occurred_at);
 CREATE INDEX IF NOT EXISTS audit_log_user_idx  ON audit_log (user_id);
 
--- ════════════════════════════════════════════════════════════════════
--- RCC_SOAP_FAULTS (RCC service health monitoring)
--- ════════════════════════════════════════════════════════════════════
-
 CREATE TABLE IF NOT EXISTS rcc_soap_faults (
     id          BIGSERIAL PRIMARY KEY,
     method      VARCHAR(64) NOT NULL,
@@ -161,10 +115,6 @@ CREATE TABLE IF NOT EXISTS rcc_soap_faults (
 );
 CREATE INDEX IF NOT EXISTS rcc_soap_faults_method_idx
     ON rcc_soap_faults (method, occurred_at);
-
--- ════════════════════════════════════════════════════════════════════
--- USER_BADGES (placeholder; badges controller queries this)
--- ════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS user_badges (
     id          BIGSERIAL PRIMARY KEY,

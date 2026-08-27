@@ -1,30 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────
-# Lo Revival - Cloudflare Tunnel Setup (Windows side)
-# ─────────────────────────────────────────────────────────────────────
-#
-# What this does:
-#   1. Downloads cloudflared.exe (the Cloudflare Tunnel client)
-#   2. Installs it as a Windows service that auto-starts on boot
-#   3. Writes a config.yml that routes the 5 subdomains to localhost:80
-#
-# PREREQUISITES:
-#   1. You have a Cloudflare account with gazeee.xyz added to it
-#      (free plan is fine).
-#   2. You have already created a Tunnel in the Cloudflare Zero Trust
-#      dashboard, and have its TUNNEL_TOKEN (a long JWT-style string).
-#      Dashboard path: Zero Trust -> Networks -> Tunnels -> Create
-#      Name: lo-revival
-#      Then in the dashboard, for each of the 5 subdomains, add a
-#      "Public Hostname" that points at http://localhost:80.
-#      OR you can do it all in this config (see step 4 below).
-#
-# After this script:
-#   - The cloudflared service is running.
-#   - The 5 subdomains are routable from the public internet, through
-#     Cloudflare, into your Windows VPS, into Apache, into Laravel.
-#
-# ─────────────────────────────────────────────────────────────────────
-
 $ErrorActionPreference = 'Stop'
 
 $tunnelToken = $env:CLOUDFLARE_TUNNEL_TOKEN
@@ -37,7 +10,6 @@ if (-not $tunnelToken) {
 
 Write-Host "=== Lo Revival - Cloudflare Tunnel Setup ===" -ForegroundColor Cyan
 
-# ── 1. Download cloudflared.exe ─────────────────────────────────────
 $cfDir = "C:\tools\cloudflared"
 if (-not (Test-Path $cfDir)) { New-Item -ItemType Directory -Path $cfDir -Force }
 $cfExe = "$cfDir\cloudflared.exe"
@@ -47,13 +19,10 @@ if (-not (Test-Path $cfExe)) {
     Invoke-WebRequest -Uri $url -OutFile $cfExe
 }
 
-# ── 2. Write the tunnel config ──────────────────────────────────────
 Write-Host "[2/3] Writing tunnel config..." -ForegroundColor Yellow
 $configDir = "C:\Windows\System32\config\systemprofile\.cloudflared"
 if (-not (Test-Path $configDir)) { New-Item -ItemType Directory -Path $configDir -Force }
 
-# Tunnel ID is embedded in the JWT token; cloudflared figures it out.
-# We only need to define the ingress rules (which subdomain -> where).
 $configContent = @"
 tunnel: lo-revival
 credentials-file: $configDir\lo-revival.json
@@ -72,17 +41,13 @@ ingress:
   - service: http_status:404
 "@
 
-# Convert the token to a JSON credentials file
-# The token IS the credentials file content (base64-decoded)
 $tokenBytes = [Convert]::FromBase64String($tunnelToken)
 $jsonPath = "$configDir\lo-revival.json"
 [System.IO.File]::WriteAllBytes($jsonPath, $tokenBytes)
 
-# Write the config
 $configPath = "$configDir\config.yml"
 Set-Content -Path $configPath -Value $configContent
 
-# ── 3. Install + start as a service ─────────────────────────────────
 Write-Host "[3/3] Installing cloudflared as a Windows service..." -ForegroundColor Yellow
 $cfService = Get-Service cloudflared -ErrorAction SilentlyContinue
 if ($cfService) {
@@ -90,11 +55,9 @@ if ($cfService) {
     & $cfExe service uninstall 2>&1 | Out-Null
 }
 
-# Install using the token (official Cloudflare Zero Trust service install)
 & $cfExe service install $tunnelToken
 Start-Service cloudflared -ErrorAction SilentlyContinue
 
-# ── Done ─────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "=== Tunnel installed! ===" -ForegroundColor Green
 Write-Host ""

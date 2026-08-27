@@ -1,16 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────
-# Lo Revival - Local Smoke Test (C# edition)
-# ─────────────────────────────────────────────────────────────────────
-#
-# Run after setup.ps1 to verify everything is wired up correctly
-# BEFORE going through the Cloudflare tunnel.
-#
-# This hits the local IIS sites directly, which reverse-proxy to
-# Kestrel (Lo.Website) on localhost:8080. If this works, the tunnel
-# will work.
-#
-# ─────────────────────────────────────────────────────────────────────
-
 $ErrorActionPreference = 'Stop'
 
 $dotnetCmd = Get-Command dotnet -ErrorAction SilentlyContinue
@@ -19,7 +6,6 @@ $publishPath = "C:\inetpub\lo-website"
 
 Write-Host "=== Lo Revival - Local Smoke Test ===" -ForegroundColor Cyan
 
-# ── 1. .NET runtime + Kestrel process ──────────────────────────────
 Write-Host ""
 Write-Host "[1/6] .NET runtime present?" -ForegroundColor Yellow
 if ($dotnetExe -and (Test-Path $dotnetExe)) {
@@ -31,7 +17,6 @@ if ($dotnetExe -and (Test-Path $dotnetExe)) {
     exit 1
 }
 
-# ── 2. Publish output present? ───────────────────────────────────
 Write-Host ""
 Write-Host "[2/6] Lo.Website published?" -ForegroundColor Yellow
 if (Test-Path "$publishPath\Lo.Website.dll") {
@@ -41,7 +26,6 @@ if (Test-Path "$publishPath\Lo.Website.dll") {
     exit 1
 }
 
-# ── 3. W3SVC running? ───────────────────────────────────────────
 Write-Host ""
 Write-Host "[3/6] W3SVC (IIS) running?" -ForegroundColor Yellow
 $w3svc = Get-Service W3SVC -ErrorAction SilentlyContinue
@@ -52,14 +36,12 @@ if ($w3svc -and $w3svc.Status -eq 'Running') {
     exit 1
 }
 
-# ── 4. PostgreSQL connectivity ───────────────────────────────────
 Write-Host ""
 Write-Host "[4/6] PostgreSQL connectivity?" -ForegroundColor Yellow
 $prodSettingsPath = "$publishPath\appsettings.Production.json"
 if (Test-Path $prodSettingsPath) {
     $json = Get-Content $prodSettingsPath -Raw | ConvertFrom-Json
     $connStr = $json.ConnectionStrings.Postgres
-    # crude parse
     $dbHost = "127.0.0.1"; if ($connStr -match 'Host=([^;]+)') { $dbHost = $Matches[1] }
     $dbPort = "5432";     if ($connStr -match 'Port=([^;]+)') { $dbPort = $Matches[1] }
     $dbName = "lo";       if ($connStr -match 'Database=([^;]+)') { $dbName = $Matches[1] }
@@ -81,11 +63,9 @@ if (Test-Path $prodSettingsPath) {
     Write-Host "  No appsettings.Production.json at $prodSettingsPath (skip)" -ForegroundColor Yellow
 }
 
-# ── 5. HTTP responses from local IIS ─────────────────────────────
 Write-Host ""
 Write-Host "[5/6] HTTP responses from local IIS?" -ForegroundColor Yellow
 
-# Add the 5 subdomains to the hosts file so they resolve to 127.0.0.1
 $hostsFile = "$env:SystemRoot\System32\drivers\etc\hosts"
 $hostEntries = @(
     "127.0.0.1`tgazeee.xyz",
@@ -133,7 +113,6 @@ foreach ($test in $tests) {
     }
 }
 
-# ── 6. RSA key + WSDL present ────────────────────────────────────
 Write-Host ""
 Write-Host "[6/6] RSA key present?" -ForegroundColor Yellow
 $keyPath = "C:\lo\storage\privateKey1024.pem"

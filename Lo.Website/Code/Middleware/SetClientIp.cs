@@ -1,14 +1,5 @@
 namespace Lo.Website.Code.Middleware;
 
-/// <summary>
-/// Replaces Laravel's SetClientIp middleware. Cloudflare sends
-/// CF-Connecting-IP and X-Forwarded-For headers; without this, the
-/// rate limiter would throttle every request to 127.0.0.1.
-///
-/// Note: in production behind Cloudflare Tunnel, the immediate
-/// remote is always 127.0.0.1 (cloudflared) and the real client IP
-/// is in CF-Connecting-IP. We honor that.
-/// </summary>
 public class SetClientIp
 {
     private readonly RequestDelegate _next;
@@ -30,7 +21,7 @@ public class SetClientIp
             var xff = ctx.Request.Headers["X-Forwarded-For"].ToString();
             if (!string.IsNullOrEmpty(xff))
             {
-                // XFF is a comma-separated list; first entry is the original client.
+
                 var first = xff.Split(',', 2)[0].Trim();
                 ctx.Items["realIp"] = first;
             }
@@ -43,20 +34,11 @@ public class SetClientIp
     }
 }
 
-/// <summary>
-/// Crude in-memory per-IP rate limit. Replaces Laravel's
-/// LimitRequestPerIp middleware.
-///
-/// Production note: this uses IMemoryCache which is per-instance and
-/// resets on restart. For a real revival swap in Redis or a
-/// proper WAF. For our load (a few players on a closed test) this
-/// is fine.
-/// </summary>
 public class RateLimit
 {
     private readonly RequestDelegate _next;
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (int count, DateTime windowStart)> _buckets = new();
-    private const int MaxPerWindow = 600;       // 600 requests
+    private const int MaxPerWindow = 600;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     public RateLimit(RequestDelegate next)
@@ -68,7 +50,7 @@ public class RateLimit
     {
         var ip = ctx.Items["realIp"] as string ?? "0.0.0.0";
         var path = ctx.Request.Path.Value ?? "";
-        // Don't rate-limit the FFlags endpoint (client polls it) or healthz
+
         if (path.StartsWith("/v1/settings") || path == "/healthz")
         {
             await _next(ctx);

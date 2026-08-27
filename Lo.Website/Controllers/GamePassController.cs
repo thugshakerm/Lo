@@ -5,20 +5,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// /Game/GamePass/GamePassHandler.ashx
-///
-/// Called by Lua via GamePassService:PlayerHasPass(). The URL is
-/// configured in Gameserver.lua:
-///
-///   GamePassService:SetPlayerHasPassUrl(
-///     "http://<assetgame>/Game/GamePass/GamePassHandler.ashx?Action=HasPass&UserID=%d&PassID=%d"
-///   )
-///
-/// Returns "True" or "False" as plain text.
-///
-/// Source: wiki/api-docs.md, wiki/infrastructure/api/gamepass.md.
-/// </summary>
 public static class GamePassController
 {
     public static void Map(RouteGroupBuilder g)

@@ -4,19 +4,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// /Game/Badges/BadgeHandler.ashx
-///
-/// The 2018M Lua calls BadgeService methods that hit this endpoint.
-/// Actions include:
-///   - HasBadge       (does this user have this badge?)
-///   - AwardBadge     (give the user this badge)
-///   - IsBadgeDisabled (is this badge disabled by admin?)
-///
-/// Returns "True" or "False" as plain text.
-///
-/// Source: wiki/api-docs.md.
-/// </summary>
 public static class BadgesController
 {
     public static void Map(RouteGroupBuilder g)
@@ -42,7 +29,7 @@ public static class BadgesController
         var userId  = (long)0; long.TryParse(ctx.Request.Query["UserID"],  out userId);
         var badgeId = (long)0; long.TryParse(ctx.Request.Query["BadgeID"], out badgeId);
         if (userId == 0 || badgeId == 0) return "False";
-        // TODO: query a user_badges table once we have one.
+
         return "False";
     }
 
@@ -51,7 +38,7 @@ public static class BadgesController
         var userId  = (long)0; long.TryParse(ctx.Request.Query["UserID"],  out userId);
         var badgeId = (long)0; long.TryParse(ctx.Request.Query["BadgeID"], out badgeId);
         if (userId == 0 || badgeId == 0) return "False";
-        // TODO: insert into user_badges.
+
         return "False";
     }
 

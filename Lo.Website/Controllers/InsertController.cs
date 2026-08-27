@@ -6,23 +6,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// /Game/Tools/InsertAsset.ashx
-///
-/// Used by the Studio "Insert" tool (free models, free decals, base
-/// sets, user sets, collections). The 2018M Studio's InsertService
-/// is configured in Gameserver.lua with URLs like:
-///
-///   InsertService:SetFreeModelUrl(
-///     "http://<assetgame>/Game/Tools/InsertAsset.ashx?type=fm&q=%s&pg=%d&rs=%d"
-///   )
-///
-/// The `type` query parameter determines which kind of insert this is:
-/// fm = free model, fd = free decal, base = base set, user = user's sets.
-/// Returns an XML body with a list of asset IDs.
-///
-/// Source: wiki/api-docs.md.
-/// </summary>
 public static class InsertController
 {
     public static void Map(RouteGroupBuilder g)
@@ -39,8 +22,8 @@ public static class InsertController
 
         int? assetType = type switch
         {
-            "fm"   => 10,  // Model
-            "fd"   => 13,  // Decal
+            "fm"   => 10,
+            "fd"   => 13,
             "base" => null,
             "user" => null,
             _      => 10,

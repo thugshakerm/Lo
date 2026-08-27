@@ -1,16 +1,5 @@
 namespace Lo.Website.Code.Config;
 
-/// <summary>
-/// Top-level config bound from appsettings.json "Revival" section.
-/// Mirrors the PHP config/rbx.php values that the Laravel controllers read.
-///
-/// Note: the "Rcc" subsection of appsettings.json is bound to
-/// Lo.Rcc.RccConfig (defined in the Lo.Rcc library) — the website
-/// project references it via a ProjectReference. We re-export it
-/// here under the alias <see cref="RccConnectionConfig"/> for
-/// backwards-compat with internal code that referenced it as
-/// "RevivalConfig.Rcc" in the old Lo.Api era.
-/// </summary>
 public class RevivalConfig
 {
     public string Domain { get; set; } = "gazeee.xyz";
@@ -19,7 +8,7 @@ public class RevivalConfig
     public FflagsConfig Fflags { get; set; } = new();
     public LuaConfig Lua { get; set; } = new();
     public SigningConfig Signing { get; set; } = new();
-    /// <summary>Default values used when opening new RCC jobs (lease, cores).</summary>
+
     public RccDefaultsConfig Rcc { get; set; } = new();
 }
 

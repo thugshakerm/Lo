@@ -10,21 +10,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// The join flow — heart of a 2018M revival.
-///
-/// When a user clicks Play, the client makes this sequence:
-///
-///   1. /Login/Negotiate.ashx (with the user's auth ticket)  -> AuthController
-///   2. /Game/PlaceLauncher.ashx (or /Game/Join.ashx)        -> THIS class
-///      We: OpenJob on RCC, get back a jobId + port + baseUrl
-///      We: return a join ticket to the client
-///   3. Client connects to game-server:port over RakNet (direct UDP, not us)
-///   4. /Game/Gameserver.lua (fetched by the server-side Lua) -> THIS class
-///      We: serve the Lua body, signed
-///
-/// Source: wiki/infrastructure/api/joinscript.md.
-/// </summary>
 public static class GameController
 {
     public static void Map(RouteGroupBuilder g)
@@ -37,10 +22,6 @@ public static class GameController
         g.MapGet("/Game/Visit.ashx",          Visit);
     }
 
-    /// <summary>
-    /// GET /Game/PlaceLauncher.ashx
-    /// Open a job on RCC and return a join ticket.
-    /// </summary>
     private static async Task<IResult> PlaceLauncher(
         HttpContext ctx, RccClient rcc, KeyManager keys, RevivalConfig cfg)
     {
@@ -52,7 +33,7 @@ public static class GameController
 
         if (string.IsNullOrEmpty(jobId))
         {
-            // New job
+
             jobId = "job-" + RandomHex(16);
             var lease = cfg.Rcc.DefaultLeaseSeconds;
             var cores = cfg.Rcc.DefaultCores;
@@ -75,10 +56,6 @@ public static class GameController
     private static Task<IResult> Studio(HttpContext ctx, RccClient rcc, KeyManager keys, RevivalConfig cfg) =>
         PlaceLauncher(ctx, rcc, keys, cfg);
 
-    /// <summary>
-    /// GET /Game/Gameserver.lua
-    /// The Lua body that runs in the game server's Lua VM at boot.
-    /// </summary>
     private static IResult GameserverLua(SecurityNotary notary)
     {
         var path = @"C:\lo\storage\rbx\files\gameserver.lua";
@@ -92,10 +69,6 @@ public static class GameController
         return Results.Content(notary.SignScript(body, FormatVersion.V2), "text/plain");
     }
 
-    /// <summary>
-    /// GET /Game/Gameserver.json
-    /// Companion JSON config (maxPlayers override, etc.).
-    /// </summary>
     private static IResult GameserverJson(RevivalConfig cfg)
     {
         return Results.Json(new
@@ -107,8 +80,6 @@ public static class GameController
 
     private static IResult Visit(HttpContext ctx) =>
         Results.Content("<?xml version=\"1.0\" encoding=\"UTF-8\"?><ok/>", "application/xml");
-
-    // ── helpers ─────────────────────────────────────────────────
 
     private static long ParseLong(HttpContext ctx, params string[] keys)
     {
@@ -133,10 +104,7 @@ public static class GameController
 
     private static string BuildJoinTicket(long placeId, string jobId, long userId, KeyManager keys)
     {
-        // Real Roblox wraps this with a --rbxsig prefix; the patched
-        // client will verify it with our public key. We sign here for
-        // completeness; the 2018L+ ticket patch makes verification a
-        // no-op anyway.
+
         var raw = $"placeId={placeId};jobId={jobId};userId={userId}";
         try
         {

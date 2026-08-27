@@ -1,47 +1,19 @@
-# ─────────────────────────────────────────────────────────────────────
-# Lo Revival - Windows VPS Setup Script (v5 - .NET 10 + IIS)
-# ─────────────────────────────────────────────────────────────────────
-#
-# Run as Administrator in PowerShell:
-#   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\setup.ps1
-#
-# What this does:
-#   1. Installs Chocolatey (if not present)
-#   2. Detects / installs .NET 10 SDK (if not present)
-#   3. Installs the .NET 10 Hosting Bundle via Chocolatey
-#   4. Pulls the Lo repo into C:\inetpub\lo
-#   5. Restores + publishes Lo.Website to C:\inetpub\lo-website
-#   6. Sets up C:\lo\storage for WSDL/keys/Lua
-#   7. Creates 5 IIS sites, all reverse-proxying to Kestrel on :8080
-#   8. Smoke-tests everything
-#
-# The PHP/Laravel backend was retired after this commit; the C# /
-# ASP.NET Core 10 rewrite is now the only backend.
-# ─────────────────────────────────────────────────────────────────────
-
-# Be lenient with non-critical command errors so the script can
-# continue past a noisy "From <url>" message on a successful git
-# fetch. We use try/catch on each step.
 $ErrorActionPreference = 'Continue'
 
 Write-Host "=== Lo Revival - Windows Setup v5 (.NET 10 + IIS) ===" -ForegroundColor Cyan
 Write-Host "IIS + .NET 10 + Lo.Website (C# / ASP.NET Core)"
 Write-Host ""
 
-# ── 1. Check we're admin ────────────────────────────────────────────
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
     Write-Error "Please run PowerShell as Administrator."
     exit 1
 }
 
-# Helper: refresh PATH from registry
 function Refresh-Path {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
 }
 
-# ── 2. Install Chocolatey if missing ────────────────────────────────
 if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Host "[1/8] Installing Chocolatey..." -ForegroundColor Yellow
     try {
@@ -57,7 +29,6 @@ if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
     Write-Host "[1/8] Chocolatey already installed" -ForegroundColor Green
 }
 
-# ── 3. .NET 10 SDK ─────────────────────────────────────────────────
 Write-Host "[2/8] .NET SDK check..." -ForegroundColor Yellow
 $dotnetExe = $null
 $dotnetVersions = & dotnet --list-sdks 2>$null
@@ -69,7 +40,6 @@ foreach ($v in $dotnetVersions) {
     }
 }
 if (-not $dotnetExe) {
-    # Try installing via the official .NET 10 script
     Write-Host "  .NET 10 SDK not found. Installing..." -ForegroundColor Yellow
     $dotnetScript = "$env:TEMP\dotnet-install.ps1"
     try {
@@ -84,7 +54,6 @@ if (-not $dotnetExe) {
     }
 }
 
-# ── 4. ASP.NET Core 10 Hosting Bundle ───────────────────────────────
 Write-Host "[3/8] ASP.NET Core 10 Hosting Bundle (IIS module)..." -ForegroundColor Yellow
 $hostingBundle = Get-ChildItem "C:\Program Files\IIS\IIS Express\AspNetCoreModuleV2.dll" -ErrorAction SilentlyContinue
 $aspnetcoreHosting = choco list --exact --id "dotnet-10.0-windowshosting" --limit-output 2>$null | Select-String "dotnet-10.0-windowshosting"
@@ -106,7 +75,6 @@ if (-not $hostingBundle -and -not $aspnetcoreHosting) {
 
 Refresh-Path
 
-# ── 5. Pull the Lo repo ─────────────────────────────────────────────
 Write-Host "[4/8] Deploying the Lo app to C:\inetpub\lo..." -ForegroundColor Yellow
 $appPath = "C:\inetpub\lo"
 if (-not (Test-Path "$appPath\.git")) {
@@ -128,7 +96,6 @@ try {
 Pop-Location
 Write-Host "  Lo repo at $appPath (branch arena/01a03b34-lo)" -ForegroundColor Green
 
-# ── 6. Build + publish Lo.Website ───────────────────────────────────
 Write-Host "[5/8] Building + publishing Lo.Website (C# / ASP.NET Core 10)..." -ForegroundColor Yellow
 $publishPath = "C:\inetpub\lo-website"
 if (Test-Path $publishPath) { Remove-Item -Recurse -Force $publishPath }
@@ -144,14 +111,12 @@ if ($pubExit -ne 0) {
 }
 Write-Host "  Published to $publishPath" -ForegroundColor Green
 
-# ── 7. Storage directories ──────────────────────────────────────────
 Write-Host "[6/8] Setting up storage directories..." -ForegroundColor Yellow
 $storageRoot = "C:\lo\storage"
 foreach ($sub in @("rbx\fflags", "rbx\files\2018CoreGui", "rbx\files\assets", "rbx\files\private", "rbx\files\public", "rbx\files\thumbs", "rbx\files\scripts")) {
     $p = Join-Path $storageRoot $sub
     if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }
 }
-# Copy reference content from the repo
 $repoStorage = "$appPath\storage\rbx\files"
 if (Test-Path $repoStorage) {
     Copy-Item -Path "$repoStorage\scripts\gameserver.lua" -Destination "$storageRoot\rbx\files\gameserver.lua" -Force -ErrorAction SilentlyContinue
@@ -164,7 +129,6 @@ if (Test-Path $repoStorage) {
 }
 Write-Host "  $storageRoot created (with reference content from repo)" -ForegroundColor Green
 
-# ── 8. appsettings.json override for production DB ──────────────────
 Write-Host "[7/8] Writing production appsettings.json..." -ForegroundColor Yellow
 $prodSettings = @{
     Logging = @{
@@ -195,10 +159,8 @@ $prodSettings = @{
 } | ConvertTo-Json -Depth 10
 Set-Content -Path "$publishPath\appsettings.Production.json" -Value $prodSettings
 
-# ── 9. IIS configuration ────────────────────────────────────────────
 Write-Host "[8/8] Configuring IIS for the 5 subdomains..." -ForegroundColor Yellow
 
-# Install IIS CGI + URL Rewrite if not present
 $requiredFeatures = @("Web-CGI", "Web-Default-Doc", "Web-Dir-Browsing", "Web-Http-Errors", "Web-Static-Content", "Web-Http-Redirect", "Web-URL-Rewrite")
 foreach ($f in $requiredFeatures) {
     $feat = Get-WindowsFeature -Name $f -ErrorAction SilentlyContinue
@@ -210,7 +172,6 @@ foreach ($f in $requiredFeatures) {
 
 Import-Module WebAdministration
 
-# Stop and remove any existing "lo-website" sites
 $existingSites = @('lo-website', 'lo-website-www', 'lo-website-api', 'lo-website-assetgame', 'lo-website-clientsettingscdn', 'lo-website-applicationcompatibility')
 foreach ($siteName in $existingSites) {
     if (Test-Path "IIS:\Sites\$siteName") {
@@ -222,13 +183,11 @@ if (Test-Path "IIS:\AppPools\lo-website-pool") {
     Remove-WebAppPool "lo-website-pool" -ErrorAction SilentlyContinue
 }
 
-# Create the application pool (single pool for in-process ASP.NET Core)
 New-WebAppPool -Name "lo-website-pool" -Force | Out-Null
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "managedRuntimeVersion" -Value ""
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "startMode" -Value "AlwaysRunning"
 Set-ItemProperty "IIS:\AppPools\lo-website-pool" -Name "processModel.identityType" -Value "ApplicationPoolIdentity"
 
-# Create ONE IIS site with all host header bindings (avoids 500.35 in-process app pool collision)
 New-WebSite -Name "lo-website" -PhysicalPath $publishPath -ApplicationPool "lo-website-pool" -Port 80 -HostHeader "www.gazeee.xyz" -Force | Out-Null
 Write-Host "  Created site: lo-website (www.gazeee.xyz -> $publishPath)" -ForegroundColor Green
 
@@ -244,16 +203,13 @@ foreach ($hostname in $otherBindings) {
     Write-Host "  Added binding: $hostname" -ForegroundColor Green
 }
 
-# Ensure logs directory exists
 if (-not (Test-Path "C:\inetpub\logs")) {
     New-Item -ItemType Directory -Path "C:\inetpub\logs" -Force | Out-Null
 }
 
-# Grant read permissions to IIS_IUSRS
 & icacls $publishPath /grant "IIS_IUSRS:(OI)(CI)RX" /t 2>&1 | Out-Null
 & icacls $storageRoot /grant "IIS_IUSRS:(OI)(CI)RX" /t 2>&1 | Out-Null
 
-# web.config for the ASP.NET Core Module (which the Hosting Bundle installed)
 $webConfig = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -271,11 +227,9 @@ $webConfigPath = "$publishPath\web.config"
 Set-Content -Path $webConfigPath -Value $webConfig
 Write-Host "  Wrote web.config with ASP.NET Core Module handler" -ForegroundColor Green
 
-# Start everything
 Start-Service W3SVC -ErrorAction SilentlyContinue
 Start-WebSite "lo-website"
 
-# ── 10. Smoke test ──────────────────────────────────────────────────
 Write-Host ""
 Write-Host "=== Smoke test ===" -ForegroundColor Cyan
 $dotVer = & dotnet --version 2>&1

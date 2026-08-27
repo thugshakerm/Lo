@@ -6,23 +6,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// /Asset/* — content delivery
-///
-/// The 2018M client fetches every Lua script, image, mesh, audio,
-/// animation, and place from /Asset/?id={id}. This is the most-called
-/// endpoint in the whole revival.
-///
-/// Behavior matrix (mirroring Finobe's rbxAPIs::asset):
-///
-///   1. If assetId is in storage\rbx\files\2018CoreGui\      -> signed Lua
-///   2. If assetId is in our DB and approved                 -> raw bytes
-///   3. If assetId is in our DB and moderated/restricted     -> 200 with empty body
-///   4. If assetId is audio (AssetType 3)                    -> supports HTTP Range
-///   5. Otherwise                                            -> 200 with empty body
-///
-/// Source: wiki/api-docs.md.
-/// </summary>
 public static class AssetController
 {
     public static void Map(RouteGroupBuilder g)
@@ -47,7 +30,6 @@ public static class AssetController
         }
         if (id == 0) return Results.Text("", "application/octet-stream");
 
-        // 1. CoreGui-style wrapped Lua (highest priority)
         var coreGuiPath = Path.Combine(@"C:\lo\storage\rbx\files\2018CoreGui", $"{id}.lua");
         if (File.Exists(coreGuiPath))
         {
@@ -57,16 +39,14 @@ public static class AssetController
             return Results.Content(signed, "text/plain");
         }
 
-        // 2. DB lookup
         var asset = await db.FindAssetAsync(id);
         if (asset is null) return Results.Text("", "application/octet-stream");
 
         if (!asset.IsApproved) return Results.Text("", "application/octet-stream");
 
-        // 3. Resolve the file
         if (string.IsNullOrEmpty(asset.StoragePath) || !File.Exists(asset.StoragePath))
         {
-            // Fall back to the conventional storage path
+
             var fallback = Path.Combine(@"C:\lo\storage\rbx\files\assets", asset.Id.ToString());
             if (!File.Exists(fallback)) return Results.Text("", "application/octet-stream");
             return BytesOrRange(ctx, File.ReadAllBytes(fallback), asset.MimeType ?? "application/octet-stream");
@@ -74,10 +54,6 @@ public static class AssetController
         return BytesOrRange(ctx, File.ReadAllBytes(asset.StoragePath), asset.MimeType ?? "application/octet-stream");
     }
 
-    /// <summary>
-    /// Honor HTTP Range requests so audio can seek. The 2018M client
-    /// sends Range: bytes=A-B for audio assets.
-    /// </summary>
     private static IResult BytesOrRange(HttpContext ctx, byte[] data, string contentType)
     {
         var range = ctx.Request.Headers["Range"].ToString();
@@ -85,7 +61,7 @@ public static class AssetController
         {
             return Results.Bytes(data, contentType);
         }
-        // Parse "bytes=A-B"
+
         if (!range.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase))
         {
             return Results.Bytes(data, contentType);

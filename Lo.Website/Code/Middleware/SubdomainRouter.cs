@@ -4,15 +4,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace Lo.Website.Code.Middleware;
 
-/// <summary>
-/// Looks at the Host header, figures out which subdomain this request
-/// is for, and stores it in HttpContext.Items["subdomain"]. Routes
-/// that should only match a particular subdomain are guarded by
-/// RequireSubdomain() in the route group.
-///
-/// Anonymous / bare-apex requests (no subdomain) are allowed through
-/// to /healthz only.
-/// </summary>
 public class SubdomainRouter
 {
     private readonly RequestDelegate _next;
@@ -45,18 +36,12 @@ public class SubdomainRouter
     {
         var ep = ctx.GetEndpoint();
         if (ep is null) return null;
-        // The endpoint metadata carries a "SubdomainKey" string that
-        // each controller's Map() method sets. We read it back here.
+
         var md = ep.Metadata.GetMetadata<SubdomainKey>();
         return md?.Key;
     }
 }
 
-/// <summary>
-/// Attached to route groups (via .WithMetadata(new SubdomainKey("www", "assetgame"))).
-/// The SubdomainGuard middleware uses it to require a particular
-/// subdomain on the request's Host header. Mismatches get a 404.
-/// </summary>
 public class SubdomainKey
 {
     public string[] Allowed { get; }

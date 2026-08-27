@@ -5,12 +5,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// api.&lt;domain&gt; — Place-related endpoints.
-///
-/// - GET /universes/validate-place-join   (auth patch target)
-/// - GET /universes/{placeId}/game-start-info
-/// </summary>
 public static class PlaceController
 {
     public static void Map(RouteGroupBuilder g)
@@ -20,12 +14,6 @@ public static class PlaceController
             new[] { "GET", "POST" }, GameStartInfo);
     }
 
-    /// <summary>
-    /// GET /universes/validate-place-join
-    /// The 2018L+ "auth patch" target. With the patch applied, the
-    /// binary JMPs over the call and this endpoint is never actually
-    /// hit. We still implement it as a permissive success response.
-    /// </summary>
     private static IResult ValidatePlaceJoin(HttpContext ctx)
     {
         return Results.Json(new
@@ -38,10 +26,6 @@ public static class PlaceController
         });
     }
 
-    /// <summary>
-    /// GET /universes/{placeId}/game-start-info
-    /// Per-place configuration: r15Morphing, maxPlayers, privateServerOwnerId.
-    /// </summary>
     private static async Task<IResult> GameStartInfo(HttpContext ctx, long placeId, AppDb db)
     {
         var place = await db.FindPlaceAsync(placeId);

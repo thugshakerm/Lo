@@ -7,18 +7,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Lo.Website.Controllers;
 
-/// <summary>
-/// /Asset/CharacterFetch.ashx and /Asset/BodyColors.ashx
-///
-/// The 2018M client fetches a player's character appearance from
-/// CharacterFetch.ashx (an XML document describing the equipped
-/// items) and the body color palette from BodyColors.ashx.
-///
-/// These are set in Gameserver.lua via:
-///   player.CharacterAppearance = "http://<assetgame>/Asset/CharacterFetch.ashx?userId=1&amp;placeId=0"
-///
-/// Source: wiki/api-docs.md, Finobe rbxAPIs::characterFetch.
-/// </summary>
 public static class AvatarController
 {
     public static void Map(RouteGroupBuilder g)
@@ -77,18 +65,13 @@ public static class AvatarController
 
     private static IResult BodyColors(HttpContext ctx)
     {
-        // BodyColors.ashx returns a single int (24-bit RGB) for the
-        // whole palette, encoded as <roblox><int name="BodyColors">...</int></roblox>.
+
         return Results.Content(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<roblox><int name=\"BodyColors\">" + DefaultBodyColorInt() + "</int></roblox>",
             "application/xml");
     }
 
-    /// <summary>
-    /// Look up a top-level value in the avatar JSON. Returns the
-    /// boxed primitive (long, string) or null if the key is missing.
-    /// </summary>
     private static object? TryGetValue(JsonElement? el, string key)
     {
         if (el is null) return null;
@@ -102,10 +85,6 @@ public static class AvatarController
         };
     }
 
-    /// <summary>
-    /// Look up a nested dict in the avatar JSON (e.g. body_colors).
-    /// Returns a long-keyed dictionary suitable for indexer access.
-    /// </summary>
     private static Dictionary<string, long>? TryGetDict(JsonElement? el, string key)
     {
         if (el is null) return null;
